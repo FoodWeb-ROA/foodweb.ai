@@ -1,0 +1,213 @@
+---
+import PhoneShot from './PhoneShot.astro';
+import SustainabilityMock from '~/components/islands/SustainabilityMock.tsx';
+import type { Feature } from '~/lib/features';
+
+interface Props {
+  feature: Feature;
+  index: number;
+  total: number;
+}
+
+const { feature, index, total } = Astro.props;
+const isEven = index % 2 === 0;
+const isLast = index === total - 1;
+const isSustainability = feature.id === 'sustainability';
+---
+<div
+  id={`feature-${feature.id}`}
+  data-feature-section
+  data-feature-idx={index}
+  class:list={['feature-section', { even: isEven, odd: !isEven, last: isLast }]}
+>
+  <div class="feature-bg-glow" aria-hidden></div>
+  <div class="feature-text reveal">
+    <div class="tag">{feature.tag}</div>
+    <h2 class="title">{feature.title}</h2>
+    <p class="body">{feature.body}</p>
+    <a class="learn" href="https://roaapp.ai" target="_blank" rel="noopener">
+      Learn more
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden><path d="M5 12h14M12 5l7 7-7 7" /></svg>
+    </a>
+  </div>
+
+  <div class="feature-preview reveal">
+    {isSustainability ? (
+      <SustainabilityMock client:visible />
+    ) : (
+      <div class="preview-row">
+        <div class="web-mock">
+          <div class="mock-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9FBA9C" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden>
+              <rect x="3" y="3" width="18" height="18" rx="2" /><path d="M3 9h18M9 21V9" />
+            </svg>
+          </div>
+          <div class="mock-label">
+            <div class="mock-title">{feature.tag}</div>
+            <div class="mock-sub">Web screenshot</div>
+          </div>
+        </div>
+        {feature.image
+          ? <PhoneShot src={feature.image} alt={`${feature.tag} mobile`} />
+          : (
+            <div class="phone-empty">
+              <div class="mock-icon sm">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9FBA9C" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden>
+                  <rect x="5" y="2" width="14" height="20" rx="2" /><path d="M12 18h.01" />
+                </svg>
+              </div>
+              <div class="mock-label">
+                <div class="mock-title sm">{feature.tag}</div>
+                <div class="mock-sub sm">Mobile</div>
+              </div>
+            </div>
+          )
+        }
+      </div>
+    )}
+  </div>
+
+  {isSustainability && (
+    <div class="coming-soon">
+      <div class="cs-pill">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFA726" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden>
+          <circle cx="12" cy="12" r="9" /><path d="M12 7v5l3.5 2" />
+        </svg>
+        <span>Coming Soon</span>
+      </div>
+    </div>
+  )}
+</div>
+
+<style>
+  .feature-section {
+    min-height: 90vh;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+    align-items: center;
+    padding: 120px 80px;
+    position: relative;
+    transition: background 0.6s ease;
+  }
+  .feature-section:not(.last) { border-bottom: 1px solid var(--c-border); }
+  .feature-section.even .feature-text { order: 1; }
+  .feature-section.even .feature-preview { order: 2; }
+  .feature-section.odd  .feature-text { order: 2; }
+  .feature-section.odd  .feature-preview { order: 1; }
+
+  .feature-section[data-active="true"] { background: var(--c-feat-act); }
+  .feature-bg-glow {
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse 50% 50% at 30% 50%, rgba(140,210,140,0.06) 0%, transparent 70%);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.6s ease;
+  }
+  .feature-section[data-active="true"] .feature-bg-glow { opacity: 1; }
+
+  .feature-text { position: relative; }
+  .tag {
+    font-size: 11px; font-weight: 700; letter-spacing: 3px;
+    color: var(--c-green); text-transform: uppercase;
+    margin-bottom: 20px;
+    transition: color 0.5s ease;
+  }
+  .feature-section[data-active="true"] .tag { color: #8FCF8F; }
+  .title {
+    font-size: clamp(32px, 4vw, 56px); font-weight: 900;
+    line-height: 1.05; letter-spacing: -1.5px;
+    color: var(--c-text); white-space: pre-line;
+  }
+  .body {
+    font-size: 17px; font-weight: 300;
+    color: var(--c-text-muted); margin-top: 20px;
+    line-height: 1.75; max-width: 440px;
+  }
+  .learn {
+    display: inline-flex; align-items: center; gap: 8px;
+    margin-top: 36px; font-size: 14px; font-weight: 600;
+    color: var(--c-green);
+    border-bottom: 1px solid rgba(74,143,74,0.3);
+    padding-bottom: 2px;
+    transition: gap 0.2s ease, color 0.5s ease, border-color 0.5s ease;
+  }
+  .feature-section[data-active="true"] .learn { color: #8FCF8F; border-bottom-color: rgba(140,210,140,0.4); }
+  .learn:hover { gap: 14px; }
+
+  .feature-preview {
+    display: flex; justify-content: center;
+    position: relative;
+  }
+  .preview-row {
+    display: flex; align-items: flex-end; gap: 16px;
+    width: 100%; max-width: 520px;
+    animation: float-y 7s ease-in-out infinite;
+  }
+
+  .web-mock {
+    flex: 1; min-width: 0;
+    background: #091A05;
+    border-radius: 14px;
+    border: 1px solid rgba(140,210,140,0.13);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 12px;
+    padding: 32px 24px;
+    min-height: 320px;
+  }
+  .mock-icon {
+    width: 48px; height: 48px; border-radius: 12px;
+    background: rgba(74,143,74,0.12);
+    border: 1px solid rgba(140,210,140,0.2);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .mock-icon.sm { width: 38px; height: 38px; border-radius: 10px; }
+  .mock-label { text-align: center; }
+  .mock-title { font-size: 12px; font-weight: 700; color: #E9F2E5; margin-bottom: 4px; }
+  .mock-title.sm { font-size: 10.5px; }
+  .mock-sub { font-size: 10.5px; color: rgba(200,220,195,0.4); font-weight: 400; }
+  .mock-sub.sm { font-size: 9.5px; }
+
+  .phone-empty {
+    width: 160px; flex-shrink: 0;
+    border-radius: 28px;
+    background: #091A05;
+    border: 2px solid rgba(100,130,100,0.22);
+    box-shadow: 0 28px 56px rgba(0,0,0,0.5);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 10px;
+    padding: 24px 16px;
+    min-height: 300px;
+  }
+
+  .coming-soon {
+    grid-column: 1 / -1;
+    display: flex; justify-content: center;
+    padding-top: 16px; padding-bottom: 8px;
+  }
+  .cs-pill {
+    display: inline-flex; align-items: center; gap: 12px;
+    padding: 14px 40px; border-radius: 14px;
+    background: rgba(24,45,18,0.97);
+    border: 1px solid rgba(255,167,38,0.35);
+    box-shadow: 0 0 32px rgba(255,167,38,0.10), 0 8px 28px -12px rgba(0,0,0,0.65);
+    width: 100%; max-width: 680px; justify-content: center;
+    font-size: 14px; font-weight: 700; color: #FFFFFF; letter-spacing: 0.8px;
+  }
+
+  @media (max-width: 1100px) {
+    .feature-section { padding: 100px 48px; gap: 48px; }
+  }
+  @media (max-width: 820px) {
+    .feature-section {
+      grid-template-columns: 1fr;
+      min-height: auto;
+      padding: 80px 20px;
+    }
+    .feature-section.even .feature-text,
+    .feature-section.odd  .feature-text { order: 1; }
+    .feature-section.even .feature-preview,
+    .feature-section.odd  .feature-preview { order: 2; }
+  }
+</style>

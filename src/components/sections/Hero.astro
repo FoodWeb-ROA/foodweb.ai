@@ -1,0 +1,148 @@
+---
+import HeroPhone from '~/components/islands/HeroPhone.tsx';
+---
+<section class="hero">
+  <div class="grid-bg" aria-hidden="true"></div>
+  <div class="fade-bottom" aria-hidden="true"></div>
+
+  <div class="hero-inner">
+    <div class="hero-left">
+      <div class="wordmark">
+        <div class="wm-cell"><span class="wm-letter">R</span></div>
+        <div class="wm-cell"><img src="/assets/iconnobg-dark.png" alt="O" /></div>
+        <div class="wm-cell"><span class="wm-letter">A</span></div>
+        <div class="wm-sub">Restaurant</div>
+        <div class="wm-sub">Operations</div>
+        <div class="wm-sub">Assistant</div>
+      </div>
+
+      <h1 class="headline">
+        Your <span class="culinary">culinary
+          <svg viewBox="0 0 220 14" preserveAspectRatio="none" aria-hidden="true" class="underline">
+            <path d="M2 9 C 55 1, 110 13, 218 5" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" opacity="0.85" />
+          </svg>
+        </span> assistant.<br />
+        Transforming <em>chaos</em>
+        <svg width="0.7em" height="0.7em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="arrow" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+        <span class="precision"><span class="precision-bg"></span><span class="precision-fg">precision.</span></span>
+      </h1>
+
+      <p class="sub">
+        <span class="roa-mark">ROA</span> seamlessly integrates into the heart of every restaurant, <strong>The Kitchen</strong>. Empowering <strong>chefs</strong> with intuitive tools, so they can focus on what they love: <strong>to cook,</strong> using their magic.
+      </p>
+
+      <div class="cta-row">
+        <a class="btn btn-primary lg" href="https://roaapp.ai" target="_blank" rel="noopener">
+          Try Beta for Free
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden><path d="M5 12h14M12 5l7 7-7 7" /></svg>
+        </a>
+        <a class="btn btn-ghost lg" href="#features">
+          Learn More
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden><path d="M5 12h14M12 5l7 7-7 7" /></svg>
+        </a>
+      </div>
+    </div>
+
+    <div class="hero-right">
+      <HeroPhone client:visible />
+    </div>
+  </div>
+</section>
+
+<style>
+  .hero {
+    position: relative;
+    min-height: 100vh;
+    padding: 140px 56px 80px;
+    background: var(--c-hero-bg);
+    color: var(--c-hero-ink);
+    overflow: hidden;
+  }
+  .grid-bg {
+    position: absolute; inset: 0; pointer-events: none;
+    background-image:
+      linear-gradient(var(--c-hero-grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--c-hero-grid) 1px, transparent 1px);
+    background-size: 56px 56px;
+    mask-image: radial-gradient(ellipse 90% 70% at 50% 40%, #000 35%, transparent 90%);
+    -webkit-mask-image: radial-gradient(ellipse 90% 70% at 50% 40%, #000 35%, transparent 90%);
+  }
+  .fade-bottom {
+    position: absolute; left: 0; right: 0; bottom: 0; height: 120px;
+    background: linear-gradient(180deg, transparent, var(--c-hero-fade));
+    pointer-events: none;
+  }
+
+  .hero-inner {
+    position: relative; max-width: 1440px; margin: 0 auto;
+    display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1.05fr);
+    gap: 60px; align-items: center;
+  }
+
+  .wordmark {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    align-items: end; max-width: 560px; margin-bottom: 36px;
+  }
+  .wm-cell {
+    text-align: center; display: flex; align-items: flex-end; justify-content: center;
+    height: clamp(110px, 13vw, 200px);
+  }
+  .wm-letter {
+    font-weight: 900; font-size: clamp(110px, 13vw, 200px);
+    color: var(--c-hero-green); line-height: 0.9; letter-spacing: -0.05em;
+  }
+  .wm-cell img {
+    width: 92%; height: clamp(110px, 13vw, 200px);
+    object-fit: contain; display: block; margin: 0 auto;
+    filter: var(--c-hero-icon-filter);
+  }
+  .wm-sub {
+    font-size: 14px; color: var(--c-hero-ink-sub);
+    text-align: center; margin-top: 18px; letter-spacing: 0.2px;
+  }
+
+  .headline {
+    font-size: clamp(40px, 4.6vw, 64px); font-weight: 800;
+    line-height: 1.1; letter-spacing: -0.025em;
+    color: var(--c-hero-ink); max-width: 720px; margin: 0;
+  }
+  .culinary { position: relative; color: var(--c-hero-green); white-space: nowrap; }
+  .underline {
+    position: absolute; left: -2%; right: 0; bottom: -0.18em;
+    width: 104%; height: 0.32em; overflow: visible; pointer-events: none;
+  }
+  .headline em { font-style: italic; font-weight: 600; color: var(--c-hero-ink-sub); letter-spacing: -0.01em; }
+  .arrow { color: var(--c-hero-green); opacity: 0.7; margin: 0 0.18em 0 0.22em; display: inline-block; vertical-align: baseline; }
+  .precision { position: relative; display: inline-block; padding: 0 0.18em; color: var(--c-hero-green); }
+  .precision-bg {
+    position: absolute; inset: 0.05em -0.04em 0.08em -0.04em;
+    background: var(--c-hero-green); opacity: 0.14; border-radius: 6px; z-index: 0;
+  }
+  .precision-fg { position: relative; z-index: 1; }
+
+  .sub {
+    font-size: 16px; line-height: 1.7;
+    color: var(--c-hero-ink-sub); max-width: 560px; margin-top: 28px;
+  }
+  .sub strong, .roa-mark { color: var(--c-hero-ink); font-weight: 700; }
+  .roa-mark { letter-spacing: 0.02em; }
+
+  .cta-row { display: flex; gap: 14px; margin-top: 40px; flex-wrap: wrap; }
+  .btn.lg { height: 52px; padding: 0 28px; border-radius: 10px; font-size: 15px; }
+  .hero .btn-primary { background: var(--c-hero-green-dk); box-shadow: 0 8px 20px -8px rgba(20,50,18,0.45); }
+  .hero .btn-primary:hover { background: var(--c-hero-green); transform: translateY(-1px); }
+  .hero .btn-ghost {
+    background: var(--c-hero-btn2-bg);
+    border-color: var(--c-hero-btn2-bd);
+    color: var(--c-hero-ink);
+  }
+  .hero .btn-ghost:hover { border-color: var(--c-hero-btn2-bd2); }
+
+  @media (max-width: 1024px) {
+    .hero-inner { grid-template-columns: 1fr; }
+    .hero-right { order: -1; max-width: 360px; margin-inline: auto; }
+  }
+  @media (max-width: 720px) {
+    .hero { padding: 120px 20px 60px; }
+  }
+</style>

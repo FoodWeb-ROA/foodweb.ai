@@ -1,0 +1,33 @@
+---
+interface Props {
+  size?: string;
+  strong?: boolean;
+}
+const { size = '1em', strong = false } = Astro.props;
+const fw = strong ? 800 : 700;
+---
+<span class="roa-mark" style={`font-size:${size}`}>
+  <span style={`font-weight:${fw}`}>R</span>
+  <img src="/assets/iconnobg-dark.png" alt="O" />
+  <span style={`font-weight:${fw}`}>A</span>
+</span>
+
+<style>
+  .roa-mark {
+    display: inline-flex; align-items: center;
+    vertical-align: baseline;
+    gap: 0; line-height: 1;
+    letter-spacing: -0.02em;
+    color: currentColor;
+  }
+  .roa-mark img {
+    width: 1.05em; height: 1.05em;
+    object-fit: contain;
+    display: inline-block;
+    vertical-align: middle;
+    margin: 0 -0.05em;
+    transform: translateY(-0.02em);
+    filter: var(--c-logo-filter);
+  }
+  .roa-mark > span { font-weight: 700; line-height: 1; }
+</style>

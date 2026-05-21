@@ -1,0 +1,95 @@
+---
+import RoaMark from '~/components/RoaMark.astro';
+
+const PILLARS = [
+  { tag: 'RECIPE MANAGER', items: ['Effortless recipe upload', 'Dynamic recipe guides', 'Guaranteed consistency', 'Intelligent organization'] },
+  { tag: 'TEAM WORKFLOW',  items: ['Automated prep-list', 'Clear, guided prep lists', 'Boosts team efficiency', 'No micromanagement'] },
+  { tag: 'LIVE INVENTORY', items: ['Real-time stock visibility', 'Eliminates overstocking', 'Minimizes food waste', 'Tightens cost control'] },
+];
+---
+<section class="pillars">
+  <div class="inner">
+    <header class="reveal">
+      <h2>
+        <span class="mark"><RoaMark size="1em" strong /></span>'s features keep your kitchen on track
+      </h2>
+      <p>From intelligent prep-list management to real-time team inventory, our features are designed to help you.</p>
+    </header>
+
+    <div class="grid">
+      {PILLARS.map((p, i) => (
+        <article class="card reveal" style={`transition-delay:${i * 80}ms`}>
+          <div class="pill">{p.tag}</div>
+          <ul>
+            {p.items.map((t) => <li><span class="dot"></span><span>{t}</span></li>)}
+          </ul>
+        </article>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .pillars {
+    padding: 60px 48px 100px;
+    background: linear-gradient(180deg, var(--c-bg2) 0%, var(--c-bg3) 100%);
+    position: relative;
+  }
+  .inner { max-width: 1200px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 64px; }
+  h2 {
+    font-size: clamp(36px, 4.5vw, 60px);
+    font-weight: 800; line-height: 1.1;
+    letter-spacing: -0.02em;
+    color: var(--c-text);
+    max-width: 900px; margin: 0 auto;
+  }
+  .mark { color: var(--c-green); margin-right: 12px; display: inline-flex; vertical-align: baseline; }
+  header p {
+    font-size: 17px; color: var(--c-text-muted);
+    margin: 22px auto 0; line-height: 1.6;
+    max-width: 640px;
+  }
+
+  .grid {
+    display: grid; gap: 24px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .card {
+    background: var(--c-pillar-bg);
+    border-radius: 18px;
+    padding: 64px 32px 48px;
+    position: relative;
+    box-shadow: 0 18px 40px -18px rgba(20,40,18,0.35), inset 0 1px 0 rgba(255,255,255,0.04);
+    border: 1px solid var(--c-pillar-bd);
+    min-height: 340px;
+    color: var(--c-pillar-ink);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+  }
+  .pill {
+    position: absolute; top: 22px; left: 50%; transform: translateX(-50%);
+    background: var(--c-pillar-pill-bg); color: var(--c-pillar-pill-ink);
+    padding: 10px 26px; border-radius: 999px;
+    font-size: 14px; font-weight: 700; letter-spacing: 1.6px;
+    white-space: nowrap;
+  }
+  ul {
+    list-style: none; padding: 0; margin: 20px 0 0;
+    display: flex; flex-direction: column; gap: 20px;
+    width: 100%; max-width: 280px;
+  }
+  li {
+    display: flex; align-items: baseline; gap: 14px;
+    font-size: 19px; font-weight: 500; line-height: 1.35;
+  }
+  .dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--c-pillar-ink); flex-shrink: 0;
+    transform: translateY(-4px);
+  }
+
+  @media (max-width: 920px) {
+    .grid { grid-template-columns: 1fr; }
+    .pillars { padding: 40px 20px 80px; }
+  }
+</style>

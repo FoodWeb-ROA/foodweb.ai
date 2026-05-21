@@ -1,0 +1,37 @@
+---
+import Logo from './Logo.astro';
+const year = new Date().getFullYear();
+---
+<footer>
+  <div class="footer-inner">
+    <Logo size={24} />
+    <nav class="links" aria-label="Footer">
+      <a href="/legal/privacy">Privacy</a>
+      <a href="/legal/terms">Terms</a>
+      <a href="/contact">Contact</a>
+    </nav>
+    <div class="copy">© {year} FoodWeb Inc.</div>
+  </div>
+</footer>
+
+<style>
+  footer {
+    padding: 40px 48px;
+    border-top: 1px solid var(--c-border);
+  }
+  .footer-inner {
+    max-width: 1440px; margin: 0 auto;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 24px; flex-wrap: wrap;
+  }
+  .links { display: flex; gap: 28px; }
+  .links a {
+    font-size: 13px; color: var(--c-text-dim);
+    transition: color .2s ease;
+  }
+  .links a:hover { color: var(--c-text-sub); }
+  .copy { font-size: 12px; color: var(--c-dim); }
+  @media (max-width: 720px) {
+    footer { padding: 32px 20px; }
+  }
+</style>

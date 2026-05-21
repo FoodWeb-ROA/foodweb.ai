@@ -1,0 +1,230 @@
+---
+import BaseLayout from '~/layouts/BaseLayout.astro';
+
+const phoneDisplay = '+34 621 013 836';
+const phoneRaw = '+34621013836';
+const whatsappUrl = `https://wa.me/${phoneRaw.replace('+', '')}`;
+
+// Google reCAPTCHA site key. Public by design — restricted by domain in the GCP console.
+const RECAPTCHA_SITE_KEY = import.meta.env.PUBLIC_RECAPTCHA_SITE_KEY || '';
+---
+<BaseLayout
+  title="Contact — ROA"
+  description="Get in touch with the FoodWeb team."
+>
+  <section class="contact">
+    <header class="reveal">
+      <span class="eyebrow">Talk to us</span>
+      <h1>Reach a human.</h1>
+      <p>Drop us a note and we'll get back within one business day.</p>
+    </header>
+
+    <form id="contact-form" class="card reveal" novalidate data-recaptcha-site-key={RECAPTCHA_SITE_KEY}>
+      <div class="row">
+        <label>
+          <span>Name<em>*</em></span>
+          <input name="name" type="text" required autocomplete="name" maxlength="120" />
+        </label>
+        <label>
+          <span>Email<em>*</em></span>
+          <input name="email" type="email" required autocomplete="email" maxlength="180" />
+        </label>
+      </div>
+      <div class="row">
+        <label>
+          <span>Company</span>
+          <input name="company" type="text" autocomplete="organization" maxlength="120" />
+        </label>
+        <label>
+          <span>Role</span>
+          <input name="role" type="text" autocomplete="organization-title" maxlength="120" />
+        </label>
+      </div>
+      <label class="full">
+        <span>Message<em>*</em></span>
+        <textarea name="message" required rows="5" maxlength="4000" placeholder="Tell us about your kitchen, what you're trying to solve, or how you'd like to use ROA."></textarea>
+      </label>
+
+      {/* honeypot — bots fill it, humans don't see it */}
+      <input class="hp" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" />
+
+      <button type="submit" class="cta">
+        Send
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden><path d="M5 12h14M12 5l7 7-7 7" /></svg>
+      </button>
+
+      <p class="form-status" data-state="idle" aria-live="polite"></p>
+    </form>
+
+    <div class="aux reveal">
+      <div>
+        <span class="eyebrow">Phone</span>
+        <a href={`tel:${phoneRaw}`}>{phoneDisplay}</a>
+      </div>
+      <div>
+        <span class="eyebrow">WhatsApp</span>
+        <a href={whatsappUrl} target="_blank" rel="noopener">Message us</a>
+      </div>
+    </div>
+  </section>
+
+  {RECAPTCHA_SITE_KEY && (
+    <script is:inline src={`https://www.google.com/recaptcha/enterprise.js?render=${RECAPTCHA_SITE_KEY}`} async defer></script>
+  )}
+
+  <script>
+    const form = document.getElementById('contact-form') as HTMLFormElement | null;
+    const status = form?.querySelector('.form-status') as HTMLParagraphElement | null;
+    const RECAPTCHA_SITE_KEY = form?.dataset.recaptchaSiteKey || '';
+
+    // Tag the submission with where the user came from. Must match the
+    // backend's allow-list and the Notion DB's Source select options.
+    const ALLOWED_SOURCES = ['contact-page', 'pricing-modal', 'other'] as const;
+    type Source = typeof ALLOWED_SOURCES[number];
+    const rawSource = new URLSearchParams(window.location.search).get('source');
+    const source: Source = (ALLOWED_SOURCES as readonly string[]).includes(rawSource ?? '')
+      ? (rawSource as Source)
+      : 'contact-page';
+
+    function setStatus(state: 'idle' | 'sending' | 'ok' | 'err', text: string) {
+      if (!status) return;
+      status.dataset.state = state;
+      status.textContent = text;
+    }
+
+    form?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!form) return;
+      const fd = new FormData(form);
+      // honeypot filled → silently drop
+      if ((fd.get('website') as string)?.trim()) {
+        setStatus('ok', 'Thanks — we\'ll be in touch.');
+        form.reset();
+        return;
+      }
+      const basePayload = {
+        name: (fd.get('name') as string || '').trim(),
+        email: (fd.get('email') as string || '').trim(),
+        company: (fd.get('company') as string || '').trim(),
+        role: (fd.get('role') as string || '').trim(),
+        message: (fd.get('message') as string || '').trim(),
+        source,
+      };
+      if (!basePayload.name || !basePayload.email || !basePayload.message) {
+        setStatus('err', 'Name, email, and message are required.');
+        return;
+      }
+
+      setStatus('sending', 'Sending…');
+      const submitBtn = form.querySelector('button[type="submit"]') as HTMLButtonElement | null;
+      if (submitBtn) submitBtn.disabled = true;
+
+      try {
+        // @ts-ignore — grecaptcha global injected by enterprise.js
+        const grecaptcha = window.grecaptcha?.enterprise;
+        if (!grecaptcha || !RECAPTCHA_SITE_KEY) {
+          throw new Error('Captcha not ready. Refresh and try again.');
+        }
+        const recaptchaToken: string = await new Promise((resolve, reject) => {
+          grecaptcha.ready(() => {
+            grecaptcha.execute(RECAPTCHA_SITE_KEY, { action: 'contact' }).then(resolve, reject);
+          });
+        });
+
+        const res = await fetch('/api/contact', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...basePayload, recaptchaToken }),
+        });
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          throw new Error(body?.error || `Request failed (${res.status})`);
+        }
+        setStatus('ok', 'Thanks — we\'ll be in touch within one business day.');
+        form.reset();
+      } catch (err: any) {
+        setStatus('err', err?.message || 'Something went wrong. Try again, or email us via WhatsApp.');
+      } finally {
+        if (submitBtn) submitBtn.disabled = false;
+      }
+    });
+  </script>
+</BaseLayout>
+
+<style>
+  .contact { max-width: 720px; margin: 0 auto; padding: 160px 32px 120px; }
+  header { text-align: center; margin-bottom: 56px; }
+  header h1 {
+    margin-top: 14px;
+    font-size: clamp(42px, 5vw, 64px); font-weight: 800;
+    letter-spacing: -0.025em; line-height: 1.05;
+  }
+  header p { margin-top: 18px; font-size: 17px; color: var(--c-text-sub); }
+
+  .card {
+    padding: 32px;
+    background: var(--c-card);
+    border: 1px solid var(--c-border);
+    border-radius: 20px;
+    display: flex; flex-direction: column; gap: 16px;
+  }
+  .row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+  label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--c-text-sub); }
+  label.full { width: 100%; }
+  label > span em { color: var(--c-green); font-style: normal; margin-left: 2px; }
+  input, textarea {
+    background: var(--c-input-bg, rgba(255,255,255,0.02));
+    color: var(--c-text);
+    border: 1px solid var(--c-border);
+    border-radius: 10px;
+    padding: 11px 14px;
+    font-size: 14px;
+    font-family: inherit;
+    transition: border-color .15s ease, box-shadow .15s ease;
+  }
+  textarea { resize: vertical; min-height: 110px; }
+  input:focus, textarea:focus {
+    outline: none;
+    border-color: var(--c-green);
+    box-shadow: 0 0 0 3px rgba(74,143,74,0.18);
+  }
+  .hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+
+  .cta {
+    align-self: flex-start;
+    padding: 11px 24px; border-radius: 40px;
+    background: var(--c-green); color: #fff;
+    font-size: 14px; font-weight: 700;
+    box-shadow: 0 0 24px rgba(74,143,74,0.35);
+    transition: transform .2s ease, box-shadow .2s ease, opacity .2s ease;
+    display: inline-flex; align-items: center; gap: 8px;
+    border: 0; cursor: pointer;
+  }
+  .cta:hover:not(:disabled) { transform: scale(1.03); box-shadow: 0 0 36px rgba(74,143,74,0.55); }
+  .cta:disabled { opacity: 0.6; cursor: progress; }
+
+  .form-status { font-size: 13px; min-height: 1.2em; margin: 0; }
+  .form-status[data-state="sending"] { color: var(--c-text-sub); }
+  .form-status[data-state="ok"]      { color: var(--c-green); }
+  .form-status[data-state="err"]     { color: #d97757; }
+
+  .aux {
+    margin-top: 32px;
+    display: grid; gap: 28px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 28px;
+    background: var(--c-card);
+    border: 1px solid var(--c-border);
+    border-radius: 20px;
+    font-size: 14px;
+  }
+  .aux > div { display: flex; flex-direction: column; gap: 6px; }
+  .aux a { color: var(--c-green); }
+  .aux a:hover { text-decoration: underline; }
+
+  @media (max-width: 720px) {
+    .contact { padding: 120px 20px 80px; }
+    .row { grid-template-columns: 1fr; }
+    .aux { grid-template-columns: 1fr; }
+  }
+</style>

@@ -1,0 +1,103 @@
+---
+import LegalLayout from '~/layouts/LegalLayout.astro';
+
+const dataCategories = [
+  { name: 'Account identity', examples: 'Email, name, profile photo, OAuth identifiers from Apple / Google', source: 'You (signup), your OAuth provider', purpose: 'Create and operate your account', basis: 'Contract — Art. 6(1)(b)' },
+  { name: 'Kitchen / business profile', examples: 'Kitchen name, address, opening hours, social, website, type', source: 'You', purpose: 'Run the service', basis: 'Contract' },
+  { name: 'Membership & role', examples: 'Which kitchens you belong to and your role', source: 'You / kitchen owner', purpose: 'Access control', basis: 'Contract' },
+  { name: 'Content data', examples: 'Recipes, chats, invoices, menus, supplier info, parsed documents and the files you upload', source: 'You and your team', purpose: 'Provide product features', basis: 'Contract' },
+  { name: 'Billing data', examples: 'Stripe customer ID, billing address, invoice history. Payment card data is held by Stripe, not by us.', source: 'You, via Stripe Checkout', purpose: 'Subscriptions and tax records', basis: 'Contract; legal obligation (tax)' },
+  { name: 'Device data', examples: 'Device ID, name, platform, app version, device fingerprint, push token', source: 'Your device', purpose: 'Device limits, push notifications, account security', basis: 'Contract; legitimate interest (security)' },
+  { name: 'Technical & usage data', examples: 'IP address, user-agent, error reports, performance traces; on web, optional session replay if you consent', source: 'Your device, our servers', purpose: 'Stability, security, abuse prevention', basis: 'Legitimate interest; consent for non-essential telemetry' },
+  { name: 'Support / feedback', examples: 'What you write to us, optional screenshots, your email', source: 'You', purpose: 'Customer support', basis: 'Contract; legitimate interest' },
+  { name: 'Communications', examples: 'Auth emails, invitations, transactional notifications', source: 'You / your team', purpose: 'Service operation', basis: 'Contract' },
+];
+---
+<LegalLayout
+  title="Privacy Policy"
+  description="How FoodWeb AI Ltd handles personal data in ROA."
+  effective="01 / 01 / 2026"
+  updated="16 / 05 / 2026"
+>
+  <h2><span class="num">1.</span><span>Who we are</span></h2>
+  <p><strong>FoodWeb AI Ltd</strong> (“ROA”, “we”, “us”) is the <strong>data controller</strong> for personal data processed through the ROA application and website (<code>roaapp.ai</code>).</p>
+  <ul>
+    <li>Registered address: 2 Castle Close, London SW19 5NH, United Kingdom</li>
+    <li>Company number: 16018953 (England & Wales)</li>
+    <li>VAT number: 482681365</li>
+    <li>Contact for privacy matters: <code>privacy@roaapp.ai</code></li>
+    <li>EU representative (Art. 27 GDPR): Arnav Agarwal, <code>privacy@roaapp.ai</code>.</li>
+    <li>UK representative: not required — FoodWeb AI Ltd is established in the UK.</li>
+    <li>Data Protection Officer: not appointed (Article 37 assessment kept on file).</li>
+  </ul>
+
+  <h2><span class="num">2.</span><span>Scope</span></h2>
+  <p>This policy describes how we process personal data of ROA users (account holders, members of kitchens), visitors to <code>roaapp.ai</code>, and users who interact with us by email or in-app messaging.</p>
+
+  <h2><span class="num">3.</span><span>What data we collect and why</span></h2>
+  <div class="data-grid">
+    {dataCategories.map((c) => (
+      <div class="data-card">
+        <div class="data-card-name">{c.name}</div>
+        <dl>
+          <dt>Examples</dt><dd>{c.examples}</dd>
+          <dt>Source</dt><dd>{c.source}</dd>
+          <dt>Purpose</dt><dd>{c.purpose}</dd>
+          <dt>Lawful basis</dt><dd>{c.basis}</dd>
+        </dl>
+      </div>
+    ))}
+  </div>
+  <p><strong>Special category data (Article 9).</strong> The content you upload (recipes, chats, dietary notes) may reveal information about religious diet, allergies, or health. We do <strong>not</strong> ask for this directly and do not use it for profiling. By uploading content you accept that we will store and process it as part of the service.</p>
+  <p><strong>What we do NOT collect:</strong></p>
+  <ul>
+    <li>Payment card numbers (Stripe holds these directly).</li>
+    <li>Tracking data for advertising purposes.</li>
+    <li>Biometric data.</li>
+  </ul>
+
+  <h2><span class="num">4.</span><span>Sources</span></h2>
+  <p>Most data comes directly from you when you sign up and use the service. Some comes from your team. Some comes from third parties when you use them to sign in (Apple, Google).</p>
+
+  <h2><span class="num">5.</span><span>How long we keep it</span></h2>
+  <ul>
+    <li><strong>Active accounts:</strong> while the account exists.</li>
+    <li><strong>Deleted accounts:</strong> hard-deleted from production within 30 days; backups roll off within 30–35 days.</li>
+    <li><strong>Stripe invoices:</strong> retained for <strong>at least 10 years</strong> for tax compliance.</li>
+    <li><strong>Server logs:</strong> 30–90 days.</li>
+    <li><strong>Sentry telemetry:</strong> 30–90 days, per Sentry project settings.</li>
+  </ul>
+
+  <h2><span class="num">6.</span><span>Who we share it with (sub-processors)</span></h2>
+  <p>Main sub-processors: Supabase (database, auth), Google Cloud (hosting, file storage, AI inference via Vertex AI), Stripe (payments), Sentry (error monitoring), MailerSend (transactional email), Notion (support tickets), Neo4j Aura (ingredient graph), Expo (mobile push). We notify users of material changes before they take effect.</p>
+
+  <h2><span class="num">7.</span><span>International transfers</span></h2>
+  <p>ROA operates on <strong>EU-only data residency</strong>: primary infrastructure in <code>europe-west1</code> (Belgium), Sentry in the EU region (<code>de.sentry.io</code>), MailerSend processes in the EU, Vertex AI inference pinned to EU regions. Where data is transferred outside the EEA / UK we rely on the EU → US Data Privacy Framework where the recipient is certified, and/or the European Commission's Standard Contractual Clauses (2021/914) plus, for UK transfers, the UK International Data Transfer Addendum.</p>
+
+  <h2><span class="num">8.</span><span>Your rights</span></h2>
+  <ul>
+    <li><strong>Access</strong> the personal data we hold about you (Art. 15).</li>
+    <li><strong>Rectify</strong> inaccurate data (Art. 16).</li>
+    <li><strong>Erase</strong> your data (Art. 17). Self-serve via Settings → Account.</li>
+    <li><strong>Restrict</strong> or <strong>object</strong> to processing (Art. 18, 21).</li>
+    <li><strong>Data portability</strong> (Art. 20).</li>
+    <li><strong>Withdraw consent</strong> at any time, where processing is based on consent.</li>
+    <li><strong>Lodge a complaint</strong> with your supervisory authority. Our lead supervisory authority is the <strong>UK ICO</strong>, <code>ico.org.uk</code>.</li>
+  </ul>
+  <p>We respond within one month (extendable to three for complex requests, with notice).</p>
+
+  <h2><span class="num">9.</span><span>Automated decision-making</span></h2>
+  <p>We use AI models (Google Gemini and Anthropic Claude via Google Vertex AI) to parse uploaded documents and recipes. These models do not make decisions that produce legal or similarly significant effects on you within the meaning of Art. 22.</p>
+
+  <h2><span class="num">10.</span><span>Security</span></h2>
+  <p>TLS in transit, disk encryption at rest, row-level security in the database, least-privilege access by ROA staff, vendor-side certifications (SOC 2 / ISO 27001 where applicable).</p>
+
+  <h2><span class="num">11.</span><span>Children</span></h2>
+  <p>ROA is <strong>not directed at children under 16</strong>. We do not knowingly collect personal data from anyone under 16.</p>
+
+  <h2><span class="num">12.</span><span>Changes to this policy</span></h2>
+  <p>We post material changes here and, where appropriate, notify you in-app or by email at least 30 days before they take effect.</p>
+
+  <h2><span class="num">13.</span><span>Contact</span></h2>
+  <p><code>privacy@roaapp.ai</code> — we aim to respond within 5 business days.</p>
+</LegalLayout>

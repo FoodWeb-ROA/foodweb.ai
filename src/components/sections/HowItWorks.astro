@@ -1,0 +1,42 @@
+---
+import IntroReveal from './IntroReveal.astro';
+import FeatureCard from './FeatureCard.astro';
+import WebFeatureNav from '~/components/islands/WebFeatureNav.tsx';
+import Stats from './Stats.astro';
+import { FEATURES } from '~/lib/features';
+---
+<div id="how-it-works" class="hiw-wrap">
+  <section class="hiw-hub">
+    <IntroReveal />
+    <div class="webhub-pos">
+      <WebFeatureNav client:load />
+    </div>
+  </section>
+
+  <Stats />
+
+  <div class="feature-stack">
+    {FEATURES.map((f, i) => (
+      <FeatureCard feature={f} index={i} total={FEATURES.length} />
+    ))}
+  </div>
+</div>
+
+<style>
+  .hiw-wrap { position: relative; }
+  .hiw-hub {
+    padding: 100px 48px;
+    background: linear-gradient(180deg, var(--c-bg) 0%, var(--c-bg2) 100%);
+    position: relative;
+    min-height: 92vh;
+    display: flex; flex-direction: column; justify-content: center;
+  }
+  .webhub-pos { margin-top: 40px; display: flex; justify-content: center; }
+  .feature-stack {
+    background: var(--c-bg3);
+    border-top: 1px solid var(--c-border);
+  }
+  @media (max-width: 720px) {
+    .hiw-hub { padding: 60px 20px; }
+  }
+</style>

@@ -1,0 +1,41 @@
+---
+---
+<section class="cta">
+  <div class="inner reveal">
+    <h2>Bring ROA into your kitchen.</h2>
+    <p>Free during beta. Onboarding included. Cancel any time.</p>
+    <div class="row">
+      <a class="btn btn-primary lg" href="https://roaapp.ai" target="_blank" rel="noopener">Try Beta for Free</a>
+      <a class="btn btn-ghost lg" href="/contact">Talk to us</a>
+    </div>
+  </div>
+</section>
+
+<style>
+  .cta {
+    padding: 140px 56px;
+    border-top: 1px solid var(--c-border);
+    background:
+      radial-gradient(ellipse 70% 70% at 50% 30%, rgba(74,143,74,0.15), transparent 70%),
+      var(--c-bg);
+  }
+  .inner {
+    max-width: 760px; margin: 0 auto; text-align: center;
+  }
+  h2 {
+    font-size: clamp(38px, 5vw, 64px); font-weight: 800;
+    letter-spacing: -0.025em; line-height: 1.05;
+  }
+  p {
+    margin-top: 18px; font-size: 17px; color: var(--c-text-sub);
+  }
+  .row {
+    margin-top: 36px;
+    display: inline-flex; gap: 14px; flex-wrap: wrap; justify-content: center;
+  }
+  .btn.lg { height: 52px; padding: 0 28px; border-radius: 10px; font-size: 15px; }
+
+  @media (max-width: 720px) {
+    .cta { padding: 90px 20px; }
+  }
+</style>

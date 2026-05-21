@@ -1,0 +1,55 @@
+.webnav {
+  position: relative;
+  user-select: none;
+  --webnav-base: #ffffff;
+  --webnav-active: #6BD16B;
+  --webnav-active-glow: rgba(107, 209, 107, 0.75);
+}
+:root[data-theme="light"] .webnav,
+:root:not([data-theme="dark"]) .webnav {
+  --webnav-base: #000000;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) .webnav { --webnav-base: #000000; }
+}
+
+.webnav-svg {
+  position: absolute; inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  overflow: visible;
+}
+.webnav-base line { stroke: var(--webnav-base); }
+.webnav-base circle { fill: var(--webnav-base); }
+
+.webnav-active line {
+  stroke: var(--webnav-active);
+  filter: drop-shadow(0 0 5px var(--webnav-active-glow));
+  transition: opacity 0.35s ease;
+}
+.webnav-active circle {
+  fill: var(--webnav-active);
+  filter: drop-shadow(0 0 6px var(--webnav-active-glow));
+}
+
+.webnav-hit {
+  position: absolute;
+  border-radius: 50%;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  z-index: 2;
+}
+.webnav-label {
+  position: absolute;
+  font-family: 'Poppins', system-ui, sans-serif;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+  pointer-events: none;
+  transition:
+    color 0.25s ease,
+    font-weight 0.25s ease,
+    transform 0.25s cubic-bezier(0.16,1,0.3,1),
+    text-shadow 0.25s ease;
+}

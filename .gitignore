@@ -1,0 +1,17 @@
+node_modules
+dist
+.astro
+.env
+.env.local
+.DS_Store
+.firebase
+firebase-debug.log
+.reference-design
+
+# backend / Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+
+.history/**

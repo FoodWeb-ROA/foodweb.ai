@@ -1,0 +1,82 @@
+---
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import { getPublishedPosts, formatDate } from '~/lib/blog';
+
+const posts = await getPublishedPosts();
+---
+<BaseLayout
+  title="Stories from the kitchen — ROA Blog"
+  description="Field notes from FoodWeb: how AI is reshaping the back of house, what we're learning in real kitchens, and the people building ROA."
+>
+  <section class="blog-index">
+    <header class="reveal">
+      <span class="eyebrow">FoodWeb Journal</span>
+      <h1>Stories from the kitchen.</h1>
+      <p>Notes from inside ROA — product, industry, and the occasional founder field report.</p>
+    </header>
+
+    {posts.length === 0 ? (
+      <div class="empty">No posts yet.</div>
+    ) : (
+      <ul class="post-list">
+        {posts.map((p) => (
+          <li>
+            <a href={`/blog/${p.id}`} class="row reveal">
+              <div class="meta">
+                <span class="tag">{p.data.tag ?? 'POST'}</span>
+                <span class="date">{formatDate(p.data.date)}</span>
+                {p.data.minutes && <span class="mins">· {p.data.minutes} min read</span>}
+              </div>
+              <h2>{p.data.title}</h2>
+              <p>{p.data.description}</p>
+              <span class="readmore">Read post →</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    )}
+  </section>
+</BaseLayout>
+
+<style>
+  .blog-index {
+    max-width: 880px; margin: 0 auto;
+    padding: 160px 32px 120px;
+  }
+  header { text-align: center; margin-bottom: 80px; }
+  header h1 {
+    margin-top: 14px;
+    font-size: clamp(42px, 5vw, 64px); font-weight: 800;
+    letter-spacing: -0.025em; line-height: 1.05;
+  }
+  header p { margin-top: 18px; font-size: 17px; color: var(--c-text-sub); }
+
+  .post-list { list-style: none; display: flex; flex-direction: column; gap: 28px; }
+  .row {
+    display: block;
+    padding: 32px;
+    background: var(--c-card);
+    border: 1px solid var(--c-border);
+    border-radius: 24px;
+    color: var(--c-text);
+    transition: transform .2s ease, border-color .2s ease;
+  }
+  .row:hover { transform: translateY(-3px); border-color: var(--c-sage); }
+  .meta { display: flex; gap: 12px; align-items: center; font-size: 12px; color: var(--c-text-muted); }
+  .tag { color: var(--c-green); font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; }
+  .row h2 {
+    margin-top: 10px;
+    font-size: 26px; font-weight: 700; letter-spacing: -0.015em; line-height: 1.25;
+  }
+  .row p { margin-top: 10px; font-size: 15px; line-height: 1.65; color: var(--c-text-sub); }
+  .readmore { display: inline-block; margin-top: 16px; font-size: 13px; font-weight: 600; color: var(--c-green); }
+  .empty {
+    text-align: center; padding: 80px 0; color: var(--c-text-muted);
+    border: 1px dashed var(--c-border); border-radius: 20px;
+  }
+
+  @media (max-width: 720px) {
+    .blog-index { padding: 130px 20px 80px; }
+    .row { padding: 24px; }
+  }
+</style>

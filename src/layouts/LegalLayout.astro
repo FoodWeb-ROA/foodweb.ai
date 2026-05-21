@@ -1,0 +1,90 @@
+---
+import BaseLayout from './BaseLayout.astro';
+
+interface Props {
+  title: string;
+  effective?: string;
+  updated?: string;
+  description: string;
+}
+const { title, effective, updated, description } = Astro.props;
+---
+<BaseLayout title={`${title} — ROA`} description={description}>
+  <article class="legal">
+    <header>
+      <span class="badge">Legal</span>
+      <h1>{title}</h1>
+      <div class="dates">
+        {effective && <span><strong>Effective date:</strong> {effective}</span>}
+        {updated && <span><strong>Last updated:</strong> {updated}</span>}
+      </div>
+    </header>
+
+    <div class="prose">
+      <slot />
+    </div>
+  </article>
+</BaseLayout>
+
+<style>
+  .legal { max-width: 820px; margin: 0 auto; padding: 140px 32px 120px; }
+  header { border-bottom: 1px solid var(--c-border); padding-bottom: 28px; margin-bottom: 32px; }
+  .badge {
+    display: inline-block; padding: 6px 16px; border-radius: 999px;
+    background: var(--c-pillar-pill-bg); color: var(--c-pillar-pill-ink);
+    font-size: 11px; font-weight: 700; letter-spacing: 2px;
+    text-transform: uppercase; margin-bottom: 18px;
+  }
+  header h1 {
+    font-size: clamp(34px, 4vw, 48px); font-weight: 800;
+    letter-spacing: -0.025em; line-height: 1.05;
+  }
+  .dates {
+    display: flex; gap: 28px; flex-wrap: wrap;
+    margin-top: 18px; font-size: 13px; color: var(--c-text-muted);
+  }
+  .dates strong { color: var(--c-text); font-weight: 700; }
+  @media (max-width: 720px) {
+    .legal { padding: 120px 20px 80px; }
+  }
+</style>
+
+<style is:global>
+  .legal .prose { color: var(--c-text); font-size: 14.5px; line-height: 1.65; }
+  .legal .prose h2 {
+    margin-top: 36px; margin-bottom: 14px;
+    font-size: 18px; font-weight: 800; letter-spacing: -0.01em;
+    color: var(--c-text);
+    display: flex; gap: 12px; align-items: baseline;
+  }
+  .legal .prose h2 .num { color: var(--c-green); font-variant-numeric: tabular-nums; font-weight: 700; }
+  .legal .prose h3 {
+    margin-top: 22px; margin-bottom: 10px;
+    font-size: 15px; font-weight: 700;
+  }
+  .legal .prose p { margin: 10px 0; color: var(--c-text-sub); }
+  .legal .prose ul { padding-left: 22px; margin: 10px 0; display: flex; flex-direction: column; gap: 6px; color: var(--c-text-sub); }
+  .legal .prose strong { color: var(--c-text); font-weight: 700; }
+  .legal .prose code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 13px; background: var(--c-card); padding: 1px 6px;
+    border-radius: 4px; color: var(--c-green);
+  }
+  .legal .prose a { color: var(--c-green); text-decoration: underline; text-underline-offset: 3px; }
+
+  .legal .data-grid { display: grid; grid-template-columns: 1fr; gap: 12px; margin-top: 10px; }
+  .legal .data-card {
+    background: var(--c-card); border: 1px solid var(--c-border);
+    border-radius: 12px; padding: 14px 16px;
+  }
+  .legal .data-card-name {
+    font-size: 13px; font-weight: 700; color: var(--c-text); margin-bottom: 8px;
+  }
+  .legal .data-card dl {
+    display: grid; grid-template-columns: 110px 1fr;
+    row-gap: 4px; column-gap: 12px;
+    font-size: 13px; line-height: 1.55; margin: 0;
+  }
+  .legal .data-card dt { color: var(--c-text-dim); font-weight: 600; }
+  .legal .data-card dd { color: var(--c-text-sub); margin: 0; }
+</style>

@@ -1,0 +1,78 @@
+---
+import Logo from './Logo.astro';
+import ThemeToggle from './islands/ThemeToggle.tsx';
+import PricingModalTrigger from './islands/PricingModalTrigger.tsx';
+
+const links = [
+  { label: 'Home', href: '/' },
+  { label: 'Blog', href: '/blog' },
+];
+---
+<nav id="site-nav" aria-label="Primary">
+  <div class="nav-inner">
+    <Logo size={34} />
+
+    <div class="nav-right">
+      {links.map((l) => (
+        <a class="nav-link" href={l.href}>{l.label}</a>
+      ))}
+      <PricingModalTrigger client:load />
+      <ThemeToggle client:load />
+      <a class="cta" href="https://roaapp.ai" target="_blank" rel="noopener">Get ROA</a>
+    </div>
+  </div>
+</nav>
+
+<script>
+  const nav = document.getElementById('site-nav');
+  if (nav) {
+    const onScroll = () => {
+      if (window.scrollY > 60) nav.classList.add('scrolled');
+      else nav.classList.remove('scrolled');
+    };
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+  }
+</script>
+
+<style>
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    height: 64px;
+    background: transparent;
+    border-bottom: 1px solid transparent;
+    transition: background .35s ease, border-color .35s ease, backdrop-filter .35s ease;
+  }
+  nav.scrolled {
+    background: var(--c-nav-bg);
+    border-bottom-color: var(--c-border);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+  }
+  .nav-inner {
+    height: 100%;
+    max-width: 1440px; margin: 0 auto;
+    padding: 0 48px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .nav-right { display: flex; align-items: center; gap: 20px; }
+  :global(.nav-link) {
+    font-size: 14px; font-weight: 500; color: var(--c-node-label);
+    transition: color .2s ease;
+  }
+  :global(.nav-link:hover) { color: var(--c-text); }
+  .cta {
+    padding: 9px 22px; border-radius: 40px;
+    background: var(--c-green); color: #fff;
+    font-size: 13px; font-weight: 700;
+    box-shadow: 0 0 24px rgba(74,143,74,0.35);
+    transition: transform .2s ease, box-shadow .2s ease;
+    margin-left: 4px;
+  }
+  .cta:hover { transform: scale(1.05); box-shadow: 0 0 36px rgba(74,143,74,0.55); }
+
+  @media (max-width: 720px) {
+    .nav-inner { padding: 0 20px; }
+    :global(.nav-link) { display: none; }
+  }
+</style>

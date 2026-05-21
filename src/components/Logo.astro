@@ -1,0 +1,21 @@
+---
+interface Props {
+  size?: number;
+  showBrand?: boolean;
+}
+const { size = 34, showBrand = true } = Astro.props;
+const letterSize = Math.round(size * 0.7);
+---
+<a href="/" class="logo" aria-label="ROA by FoodWeb">
+  <span class="letter" style={`font-size:${letterSize}px`}>R</span>
+  <img src="/assets/iconnobg.png" alt="" width={size} height={size} class="icon" />
+  <span class="letter" style={`font-size:${letterSize}px`}>A</span>
+  {showBrand && <span class="brand">by FoodWeb</span>}
+</a>
+
+<style>
+  .logo { display:inline-flex; align-items:center; gap:0; color:var(--c-text); }
+  .letter { font-weight:900; line-height:1; letter-spacing:-1px; }
+  .icon { object-fit:contain; filter: var(--c-logo-filter); }
+  .brand { font-size:11px; font-weight:500; color:var(--c-dim); margin-left:12px; letter-spacing:0.5px; }
+</style>

@@ -1,0 +1,11 @@
+__pycache__
+*.pyc
+*.pyo
+.venv
+.mypy_cache
+.pytest_cache
+.git
+.gitignore
+.DS_Store
+cloudbuild.yaml
+README.md

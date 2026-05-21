@@ -1,0 +1,105 @@
+name: Deploy foodweb.ai
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Cancel in-flight runs when a newer push to main arrives so we don't race deploys.
+concurrency:
+  group: deploy-main
+  cancel-in-progress: true
+
+env:
+  GCP_PROJECT_ID: imperial-rarity-442220-c9
+  GCP_REGION: europe-west1
+
+jobs:
+  notion-proxy:
+    name: Deploy notion-proxy → Cloud Run
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ env.GCP_PROJECT_ID }}
+
+      # Pushes NOTION_TOKEN into Secret Manager so cloudbuild.yaml's --set-secrets
+      # binding resolves. reCAPTCHA verification uses the Cloud Run SA's ADC, so
+      # no captcha secret is needed. Idempotent: adds a new version each deploy.
+      - name: Sync secrets into Secret Manager
+        run: |
+          set -euo pipefail
+          ensure_secret() {
+            local name="$1"
+            local value="$2"
+            if ! gcloud secrets describe "$name" >/dev/null 2>&1; then
+              gcloud secrets create "$name" --replication-policy=automatic
+            fi
+            printf '%s' "$value" | gcloud secrets versions add "$name" --data-file=-
+          }
+          ensure_secret "notion_proxy_notion_token" "${{ secrets.NOTION_TOKEN }}"
+
+      - name: Submit Cloud Build
+        working-directory: backend
+        run: |
+          gcloud builds submit \
+            --config=cloudbuild.yaml \
+            --project=${{ env.GCP_PROJECT_ID }} \
+            --substitutions=_RECAPTCHA_SITE_KEY="${{ secrets.RECAPTCHA_SITE_KEY }}" \
+            .
+
+  hosting:
+    name: Build & deploy Astro → Firebase Hosting
+    runs-on: ubuntu-latest
+    needs: notion-proxy
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'yarn'
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: backend/requirements.txt
+
+      - run: yarn install --frozen-lockfile
+
+      # Notion → src/content/blog/*.mdx. Must run before `yarn build` so Astro
+      # sees the fresh content. Notion is the source of truth — anything not
+      # in the DB gets pruned locally.
+      - name: Sync blog posts from Notion
+        working-directory: backend
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_BLOG_DATABASE_ID: 07926233-654b-4086-998f-40e21366a5ba
+        run: |
+          pip install --quiet -r requirements.txt
+          python -m app.blog_sync
+
+      - name: Build Astro
+        env:
+          PUBLIC_RECAPTCHA_SITE_KEY: ${{ secrets.RECAPTCHA_SITE_KEY }}
+        run: yarn build
+
+      - name: Deploy to Firebase Hosting
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          channelId: live
+          projectId: foodweb-ai

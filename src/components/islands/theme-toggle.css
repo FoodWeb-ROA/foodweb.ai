@@ -1,0 +1,13 @@
+.theme-toggle {
+  appearance: none;
+  border: 1px solid var(--c-border);
+  background: transparent;
+  cursor: pointer;
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  padding: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: var(--c-node-label);
+  transition: color .2s ease, border-color .2s ease;
+}
+.theme-toggle:hover { color: var(--c-text); border-color: var(--c-sage); }

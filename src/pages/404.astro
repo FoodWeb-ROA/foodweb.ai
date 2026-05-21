@@ -1,0 +1,29 @@
+---
+import BaseLayout from '~/layouts/BaseLayout.astro';
+---
+<BaseLayout
+  title="Not found — ROA"
+  description="The page you're looking for doesn't exist."
+>
+  <section class="nf">
+    <span class="code">404</span>
+    <h1>Off the menu.</h1>
+    <p>That page isn't here. Try the home page or the blog.</p>
+    <div class="row">
+      <a class="btn btn-primary" href="/">Home</a>
+      <a class="btn btn-ghost" href="/blog">Blog</a>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .nf { max-width: 600px; margin: 0 auto; padding: 200px 20px 160px; text-align: center; }
+  .code {
+    font-size: clamp(80px, 14vw, 160px); font-weight: 900; line-height: 1;
+    color: var(--c-green); letter-spacing: -0.04em;
+    display: block; margin-bottom: 18px;
+  }
+  h1 { font-size: clamp(32px, 4vw, 48px); font-weight: 800; letter-spacing: -0.02em; }
+  p { margin-top: 14px; color: var(--c-text-sub); font-size: 16px; }
+  .row { margin-top: 32px; display: inline-flex; gap: 14px; }
+</style>

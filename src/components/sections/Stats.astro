@@ -1,0 +1,117 @@
+---
+const STATS = [
+  { value: '€3.20',  label: 'Recovered per €1 invested', detail: 'Net return on every euro spent on ROA' },
+  { value: '25–40%', label: 'Less food waste',           detail: 'With AI-driven inventory tools' },
+  { value: '6–8%',   label: 'Lower labour costs',        detail: 'Through predictive shift planning' },
+  { value: '€14×',   label: 'Revenue per €1 saved',      detail: 'For every euro of food you don’t waste' },
+];
+---
+<section class="stats">
+  <div class="inner">
+    <header class="reveal">
+      <span class="eyebrow">Backed by industry data</span>
+      <h2>
+        For every <span class="green">€1 invested</span>,<br />
+        you recover
+        <span class="highlight">
+          <span class="highlight-bg"></span>
+          <span class="highlight-fg">€3.20</span>
+        </span>.
+      </h2>
+      <p>
+        Our goal is to help <strong>mid-sized restaurants</strong>
+        (€10k/mo food cost · €12k/mo labour) recover their investment in ROA within the
+        <strong>first three months</strong>.
+      </p>
+    </header>
+
+    <div class="grid reveal">
+      {STATS.map((s, i) => (
+        <div class:list={['stat', { divided: i > 0 }]}>
+          <div class="val">{s.value}</div>
+          <div class="lbl">{s.label}</div>
+          <div class="detail">{s.detail}</div>
+        </div>
+      ))}
+    </div>
+
+    <div class="roi reveal">
+      <span>Net annual ROI</span>
+      <span class="big">€8,520</span>
+      <span class="sep">·</span>
+      <span>Net monthly</span>
+      <span class="big">€710</span>
+    </div>
+  </div>
+</section>
+
+<style>
+  .stats { padding: 120px 80px; border-top: 1px solid var(--c-border); }
+  .inner { max-width: 1100px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 72px; }
+  .eyebrow {
+    display: inline-block; padding: 8px 18px; border-radius: 999px;
+    background: var(--c-pillar-pill-bg); color: var(--c-pillar-pill-ink);
+    font-size: 11px; font-weight: 700; letter-spacing: 2.4px;
+    text-transform: uppercase; margin-bottom: 24px;
+  }
+  h2 {
+    font-size: clamp(36px, 4.4vw, 60px);
+    font-weight: 800; line-height: 1.08;
+    letter-spacing: -0.02em; color: var(--c-text);
+    max-width: 880px; margin: 0 auto;
+  }
+  .green { color: var(--c-green); }
+  .highlight { position: relative; color: var(--c-green); padding: 0 0.12em; white-space: nowrap; }
+  .highlight-bg {
+    position: absolute; inset: 0.08em -0.04em 0.1em -0.04em;
+    background: var(--c-hero-green); opacity: 0.14;
+    border-radius: 6px; z-index: 0;
+  }
+  .highlight-fg { position: relative; z-index: 1; }
+  header p {
+    font-size: 17px; color: var(--c-text-muted);
+    margin: 22px auto 0; line-height: 1.6;
+    max-width: 640px;
+  }
+  header p strong { color: var(--c-text); font-weight: 600; }
+
+  .grid {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    text-align: center;
+    border-top: 1px solid var(--c-border);
+    border-bottom: 1px solid var(--c-border);
+  }
+  .stat { padding: 48px 24px; }
+  .stat.divided { border-left: 1px solid var(--c-border); }
+  .val {
+    font-size: clamp(36px, 4.6vw, 64px); font-weight: 900;
+    color: var(--c-green); line-height: 1; letter-spacing: -0.04em;
+    text-shadow: var(--c-stat-glow);
+    white-space: nowrap;
+  }
+  .lbl { font-size: 14px; color: var(--c-text); margin-top: 14px; font-weight: 600; letter-spacing: 0.2px; }
+  .detail {
+    font-size: 12.5px; color: var(--c-text-muted); margin: 8px auto 0;
+    font-weight: 300; line-height: 1.5; max-width: 220px;
+  }
+
+  .roi {
+    display: flex; align-items: center; justify-content: center;
+    gap: 24px; margin-top: 36px; flex-wrap: wrap;
+    font-size: 13px; color: var(--c-text-muted);
+    letter-spacing: 1.5px; text-transform: uppercase; font-weight: 600;
+  }
+  .roi .big {
+    color: var(--c-green); font-size: 22px; font-weight: 900;
+    letter-spacing: -0.01em; text-transform: none;
+  }
+  .roi .sep { opacity: 0.4; }
+
+  @media (max-width: 900px) {
+    .stats { padding: 80px 20px; }
+    .grid { grid-template-columns: repeat(2, 1fr); }
+    .stat.divided:nth-child(3) { border-left: none; }
+    .stat:nth-child(n+3) { border-top: 1px solid var(--c-border); }
+  }
+</style>
