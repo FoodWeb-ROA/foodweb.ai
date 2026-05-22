@@ -3,9 +3,11 @@ from __future__ import annotations
 import logging
 import os
 from pathlib import Path
-from typing import Literal
+from typing import Any, Literal
 
 import httpx
+import sentry_sdk
+from sentry_sdk.types import Event, Hint
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -17,6 +19,41 @@ load_dotenv(Path(__file__).resolve().parent.parent / ".env")
 
 log = logging.getLogger("notion-proxy")
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s | %(message)s")
+
+
+def _sentry_before_send(event: Event, hint: Hint) -> Event | None:
+    """Drop client-error HTTPExceptions — they're user/captcha problems, not bugs."""
+    exc_info = hint.get("exc_info") if isinstance(hint, dict) else None
+    if isinstance(exc_info, tuple) and len(exc_info) >= 2:
+        exc = exc_info[1]
+        if isinstance(exc, HTTPException) and 400 <= exc.status_code < 500:
+            return None
+    return event
+
+
+def _sentry_traces_sampler(ctx: dict[str, Any]) -> float:
+    name = str((ctx.get("transaction_context") or {}).get("name") or "")
+    if name.endswith("/healthz") or "/healthz" in name.lower():
+        return 0.0
+    return 1.0
+
+
+_SENTRY_DSN = os.environ.get("SENTRY_DSN", "").strip()
+_ENVIRONMENT = os.environ.get("ENVIRONMENT", "").strip().lower()
+# Cloud Run sets ENVIRONMENT=production via cloudbuild; local dev leaves it unset,
+# so Sentry stays disabled even if a developer happens to have SENTRY_DSN in their .env.
+if _SENTRY_DSN and _ENVIRONMENT in {"production", "staging"}:
+    sentry_sdk.init(
+        dsn=_SENTRY_DSN,
+        environment=_ENVIRONMENT,
+        traces_sampler=_sentry_traces_sampler,
+        send_default_pii=False,
+        max_breadcrumbs=50,
+        before_send=_sentry_before_send,
+    )
+    log.info("Sentry configured")
+else:
+    log.info("Sentry disabled (local/dev runtime)")
 
 NOTION_TOKEN = os.environ["NOTION_TOKEN"]
 NOTION_CONTACT_DATABASE_ID = os.environ["NOTION_CONTACT_DATABASE_ID"]

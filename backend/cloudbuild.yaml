@@ -72,8 +72,8 @@ steps:
           --port 8080 \
           --max-instances ${_MAX_INSTANCES} \
           --concurrency 40 \
-          --set-env-vars "^@^NOTION_CONTACT_DATABASE_ID=${_NOTION_CONTACT_DATABASE_ID}@NOTION_BLOG_DATABASE_ID=${_NOTION_BLOG_DATABASE_ID}@CORS_ALLOWED_ORIGINS=${_CORS_ALLOWED_ORIGINS}@RECAPTCHA_PROJECT_ID=${_RECAPTCHA_PROJECT_ID}@RECAPTCHA_SITE_KEY=${_RECAPTCHA_SITE_KEY}" \
-          --set-secrets "NOTION_TOKEN=foodweb_ai_notion_token:latest" \
+          --set-env-vars "^@^NOTION_CONTACT_DATABASE_ID=${_NOTION_CONTACT_DATABASE_ID}@NOTION_BLOG_DATABASE_ID=${_NOTION_BLOG_DATABASE_ID}@CORS_ALLOWED_ORIGINS=${_CORS_ALLOWED_ORIGINS}@RECAPTCHA_PROJECT_ID=${_RECAPTCHA_PROJECT_ID}@RECAPTCHA_SITE_KEY=${_RECAPTCHA_SITE_KEY}@ENVIRONMENT=production" \
+          --set-secrets "NOTION_TOKEN=foodweb_ai_notion_token:latest,SENTRY_DSN=foodweb_ai_backend_sentry_dsn:latest" \
           --service-account ${_SERVICE_ACCOUNT} \
           --timeout 30s \
           --memory 256Mi \
