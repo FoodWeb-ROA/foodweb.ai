@@ -1,13 +1,13 @@
-# Cloud Build configuration for notion-proxy.
+# Cloud Build configuration for the foodweb.ai backend.
 # Thin Cloud Run service: contact form ingest + blog post sync from Notion.
 # Single environment — the website doesn't have staging/prod branches.
 substitutions:
   _REGION: "europe-west1"
-  _REPOSITORY: "notion-proxy"
-  _SERVICE_NAME: "notion-proxy"
+  _REPOSITORY: "foodweb-ai"
+  _SERVICE_NAME: "foodweb-ai"
   _IMAGE_TAG: "latest"
   _PROJECT_ID: "imperial-rarity-442220-c9"
-  _SERVICE_ACCOUNT: "notion-proxy@imperial-rarity-442220-c9.iam.gserviceaccount.com"
+  _SERVICE_ACCOUNT: "foodweb-ai@imperial-rarity-442220-c9.iam.gserviceaccount.com"
   _MAX_INSTANCES: "2"
 
   # Static config — both DBs live in OPS / Growth & Marketing.
@@ -73,7 +73,7 @@ steps:
           --max-instances ${_MAX_INSTANCES} \
           --concurrency 40 \
           --set-env-vars "NOTION_CONTACT_DATABASE_ID=${_NOTION_CONTACT_DATABASE_ID},NOTION_BLOG_DATABASE_ID=${_NOTION_BLOG_DATABASE_ID},CORS_ALLOWED_ORIGINS=${_CORS_ALLOWED_ORIGINS},RECAPTCHA_PROJECT_ID=${_RECAPTCHA_PROJECT_ID},RECAPTCHA_SITE_KEY=${_RECAPTCHA_SITE_KEY}" \
-          --set-secrets "NOTION_TOKEN=notion_proxy_notion_token:latest" \
+          --set-secrets "NOTION_TOKEN=foodweb_ai_notion_token:latest" \
           --service-account ${_SERVICE_ACCOUNT} \
           --timeout 30s \
           --memory 256Mi \
@@ -84,5 +84,9 @@ options:
   dynamicSubstitutions: true
   logging: CLOUD_LOGGING_ONLY
   machineType: "E2_HIGHCPU_8"
+
+# Run the build itself as the same SA used for runtime/deploy, so one identity
+# owns the full pipeline. Requires logging: CLOUD_LOGGING_ONLY (set above).
+serviceAccount: "projects/${_PROJECT_ID}/serviceAccounts/${_SERVICE_ACCOUNT}"
 
 timeout: "900s"

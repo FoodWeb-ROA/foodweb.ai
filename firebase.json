@@ -1,5 +1,6 @@
 {
   "hosting": {
+    "site": "foodweb-ai",
     "public": "dist",
     "cleanUrls": true,
     "trailingSlash": false,
@@ -32,7 +33,7 @@
       {
         "source": "/api/contact",
         "run": {
-          "serviceId": "notion-proxy",
+          "serviceId": "foodweb-ai",
           "region": "europe-west1"
         }
       },

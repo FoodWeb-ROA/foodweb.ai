@@ -1,9 +1,3 @@
-"""notion-proxy.
-
-Thin Cloud Run service that proxies foodweb.ai traffic into Notion.
-Currently: POST /contact → Website Contact Form database.
-Coming next turn: blog post sync from a Notion database.
-"""
 from __future__ import annotations
 
 import logging
