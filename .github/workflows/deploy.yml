@@ -69,22 +69,6 @@ jobs:
         with:
           project_id: ${{ env.GCP_PROJECT_ID }}
 
-      # Pushes FOODWEB_AI_NOTION_TOKEN into Secret Manager so cloudbuild.yaml's --set-secrets
-      # binding resolves. reCAPTCHA verification uses the Cloud Run SA's ADC, so
-      # no captcha secret is needed. Idempotent: adds a new version each deploy.
-      - name: Sync secrets into Secret Manager
-        run: |
-          set -euo pipefail
-          ensure_secret() {
-            local name="$1"
-            local value="$2"
-            if ! gcloud secrets describe "$name" >/dev/null 2>&1; then
-              gcloud secrets create "$name" --replication-policy=automatic
-            fi
-            printf '%s' "$value" | gcloud secrets versions add "$name" --data-file=-
-          }
-          ensure_secret "foodweb_ai_notion_token" "${{ secrets.FOODWEB_AI_NOTION_TOKEN }}"
-
       - name: Submit Cloud Build
         working-directory: backend
         run: |
