@@ -69,12 +69,20 @@ jobs:
         with:
           project_id: ${{ env.GCP_PROJECT_ID }}
 
+      # `--service-account` + `--default-buckets-behavior=REGIONAL_USER_OWNED_BUCKET`
+      # makes the build run as the foodweb-ai SA and stage source in a per-region
+      # user-owned bucket. This avoids the legacy `<project>_cloudbuild` bucket
+      # (which requires serviceusage.services.use on the invoking principal —
+      # granting storage.objectUser on the bucket alone isn't enough).
       - name: Submit Cloud Build
         working-directory: backend
         run: |
           gcloud builds submit \
             --config=cloudbuild.yaml \
             --project=${{ env.GCP_PROJECT_ID }} \
+            --region=${{ env.GCP_REGION }} \
+            --service-account=projects/${{ env.GCP_PROJECT_ID }}/serviceAccounts/${{ secrets.FOODWEB_AI_SA }} \
+            --default-buckets-behavior=REGIONAL_USER_OWNED_BUCKET \
             --substitutions=_RECAPTCHA_SITE_KEY="${{ secrets.RECAPTCHA_SITE_KEY }}" \
             .
 
