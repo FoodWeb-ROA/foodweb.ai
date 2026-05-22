@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import os
+import secrets as _secrets
 from pathlib import Path
 from typing import Any, Literal
 
@@ -9,7 +10,7 @@ import httpx
 import sentry_sdk
 from sentry_sdk.types import Event, Hint
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, Header, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from google.cloud import recaptchaenterprise_v1
 from pydantic import BaseModel, EmailStr, Field, field_validator
@@ -50,6 +51,7 @@ if _SENTRY_DSN and _ENVIRONMENT in {"production", "staging"}:
         send_default_pii=False,
         max_breadcrumbs=50,
         before_send=_sentry_before_send,
+        enable_logs=True,
     )
     log.info("Sentry configured")
 else:
@@ -67,6 +69,16 @@ CORS_ALLOWED_ORIGINS = [
 ]
 
 NOTION_PAGES_URL = "https://api.notion.com/v1/pages"
+
+# Notion DB automations call this service when a blog page is published; we forward
+# to GitHub's workflow_dispatch to re-run deploy.yml, which re-runs blog_sync and
+# redeploys the site. Both values are optional so local dev / preview envs don't
+# need them; the endpoint 503s if either is missing.
+BLOG_WEBHOOK_SECRET = os.environ.get("BLOG_WEBHOOK_SECRET", "")
+GITHUB_DISPATCH_TOKEN = os.environ.get("GITHUB_DISPATCH_TOKEN", "")
+GITHUB_DISPATCH_REPO = os.environ.get("GITHUB_DISPATCH_REPO", "FoodWeb-ROA/foodweb.ai")
+GITHUB_DISPATCH_WORKFLOW = os.environ.get("GITHUB_DISPATCH_WORKFLOW", "deploy.yml")
+GITHUB_DISPATCH_REF = os.environ.get("GITHUB_DISPATCH_REF", "main")
 
 # Authenticated via Application Default Credentials — the Cloud Run service account
 # needs roles/recaptchaenterprise.agent on the project.
@@ -171,3 +183,68 @@ def _rich_text(value: str) -> dict:
     # Notion caps rich_text content per block at 2000 chars; split if needed.
     chunks = [value[i : i + 2000] for i in range(0, len(value), 2000)]
     return {"rich_text": [{"text": {"content": c}} for c in chunks]}
+
+
+@app.post("/webhooks/notion-blog", status_code=202)
+async def notion_blog_webhook(request: Request, x_webhook_secret: str = Header(default="")):
+    if not BLOG_WEBHOOK_SECRET or not GITHUB_DISPATCH_TOKEN:
+        log.error("blog webhook called but BLOG_WEBHOOK_SECRET / GITHUB_DISPATCH_TOKEN unset")
+        raise HTTPException(status_code=503, detail={"error": "Webhook not configured."})
+    if not _secrets.compare_digest(x_webhook_secret, BLOG_WEBHOOK_SECRET):
+        raise HTTPException(status_code=401, detail={"error": "Bad secret."})
+
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+    page_id = _extract_page_id(body)
+    if not page_id:
+        log.warning("blog webhook: no page id in body keys=%s", list(body) if isinstance(body, dict) else type(body).__name__)
+        raise HTTPException(status_code=400, detail={"error": "No page id in webhook body."})
+
+    async with httpx.AsyncClient(timeout=15.0) as client:
+        page_resp = await client.get(
+            f"https://api.notion.com/v1/pages/{page_id}",
+            headers={
+                "Authorization": f"Bearer {NOTION_TOKEN}",
+                "Notion-Version": NOTION_VERSION,
+            },
+        )
+        if page_resp.status_code >= 400:
+            log.error("notion fetch failed %s: %s", page_resp.status_code, page_resp.text[:500])
+            raise HTTPException(status_code=502, detail={"error": "Could not read page."})
+        page = page_resp.json()
+        if bool((page.get("properties", {}).get("Draft") or {}).get("checkbox")):
+            log.info("blog webhook %s: draft, skipping dispatch", page_id)
+            return {"ok": True, "skipped": "draft"}
+
+        url = (
+            f"https://api.github.com/repos/{GITHUB_DISPATCH_REPO}"
+            f"/actions/workflows/{GITHUB_DISPATCH_WORKFLOW}/dispatches"
+        )
+        resp = await client.post(
+            url,
+            headers={
+                "Authorization": f"Bearer {GITHUB_DISPATCH_TOKEN}",
+                "Accept": "application/vnd.github+json",
+                "X-GitHub-Api-Version": "2022-11-28",
+            },
+            json={"ref": GITHUB_DISPATCH_REF},
+        )
+    if resp.status_code >= 400:
+        log.error("github dispatch failed %s: %s", resp.status_code, resp.text[:500])
+        raise HTTPException(status_code=502, detail={"error": "Could not trigger rebuild."})
+    log.info("dispatched %s on %s@%s for page %s", GITHUB_DISPATCH_WORKFLOW, GITHUB_DISPATCH_REPO, GITHUB_DISPATCH_REF, page_id)
+    return {"ok": True}
+
+
+def _extract_page_id(body: Any) -> str:
+    # Notion "Send webhook" payloads put the triggering page under .data; older /
+    # custom payloads might put it at the top level. Try both, accept either shape.
+    if not isinstance(body, dict):
+        return ""
+    for candidate in (body.get("data"), body):
+        if isinstance(candidate, dict) and candidate.get("object") == "page" and candidate.get("id"):
+            return str(candidate["id"])
+    pid = body.get("page_id") or body.get("id")
+    return str(pid) if pid else ""
