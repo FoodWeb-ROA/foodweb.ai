@@ -9,6 +9,8 @@ interface Props {
   onSelect?: (id: string) => void;
   /** override label font size in pixels (used by the small floating logo) */
   labelSizePx?: number | null;
+  /** when false, hover/click are ignored and only scrollNode drives the active state */
+  interactive?: boolean;
 }
 
 export default function WebNavigator({
@@ -16,9 +18,10 @@ export default function WebNavigator({
   scrollNode = null,
   onSelect,
   labelSizePx = null,
+  interactive = true,
 }: Props) {
   const [hovered, setHovered] = useState<string | null>(null);
-  const active = hovered || scrollNode;
+  const active = interactive ? (hovered || scrollNode) : scrollNode;
   const points = useMemo(() => nodePoints(size), [size]);
   const pointById = useMemo(() => {
     const m = new Map<string, { x: number; y: number }>();

@@ -9,29 +9,228 @@
   max-height: 920px;
 }
 
+/* ---------- Backdrop (shown only when modal is open) ---------- */
+.webfloat-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(8, 18, 6, 0.62);
+  backdrop-filter: blur(6px) saturate(140%);
+  -webkit-backdrop-filter: blur(6px) saturate(140%);
+  z-index: 100;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.webfloat-backdrop.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ---------- Floating logo (also serves as the modal shell) ----------
+   Position is encoded entirely in `transform` so the card can be sized in
+   px (floating) or expanded (modal) and translate consistently at every
+   frame of the resize. `100%` and `50%` here resolve against the element's
+   own width/height, which keeps it locked to the corner or centre while
+   the box grows. */
 .webfloat {
   position: fixed;
-  bottom: 28px; right: 28px;
+  top: 0;
+  left: 0;
   z-index: 90;
   opacity: 0;
-  transform: scale(0.88) translateY(16px);
-  transition:
-    opacity 0.5s cubic-bezier(0.16,1,0.3,1),
-    transform 0.5s cubic-bezier(0.16,1,0.3,1);
   pointer-events: none;
+  transform: translate(calc(100vw - 100% - 28px), calc(100dvh - 100% - 28px + 16px));
+  transform-origin: top left;
+  will-change: transform;
+  transition:
+    opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.webfloat.is-visible { opacity: 1; transform: scale(1) translateY(0); pointer-events: auto; }
+.webfloat.is-visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate(calc(100vw - 100% - 28px), calc(100dvh - 100% - 28px));
+}
+.webfloat.is-modal {
+  z-index: 110;
+  transform: translate(calc(50vw - 50%), calc(50dvh - 50%));
+}
 
+/* ---------- Card (grows from floating chip to modal panel) ---------- */
 .webfloat-card {
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
   background: var(--c-nav-bg);
   backdrop-filter: blur(28px) saturate(180%);
   -webkit-backdrop-filter: blur(28px) saturate(180%);
   border: 1px solid var(--c-border);
   border-radius: 22px;
   padding: 14px;
-  box-shadow: 0 8px 40px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.07);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  transition:
+    padding 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+    border-radius 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.webfloat.is-modal .webfloat-card {
+  padding: 28px;
+  border-radius: 26px;
+  box-shadow:
+    0 30px 80px -20px rgba(0, 0, 0, 0.65),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+
+/* ---------- Navigator slot (resizable layout box) ---------- */
+.webfloat-nav {
+  position: relative;
+  width: 280px;
+  height: 280px;
+  flex-shrink: 0;
+  transition:
+    width 0.65s cubic-bezier(0.16, 1, 0.3, 1),
+    height 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+}
+/* The inner div holds the actual WebNavigator at fixed 280px and is
+   visually scaled up so labels, dots and edges grow in lockstep with
+   the container box. */
+.webfloat-nav-inner {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 280px;
+  height: 280px;
+  transform-origin: top left;
+  transform: scale(1);
+  transition: transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.webfloat.is-modal .webfloat-nav { width: 440px; height: 440px; }
+.webfloat.is-modal .webfloat-nav-inner { transform: scale(1.5714); }
+
+/* Navigator is purely a visual element while the modal is open */
+.webfloat.is-modal .webnav-hit {
+  pointer-events: none;
+  cursor: default;
+}
+
+/* ---------- Detail panel ----------
+   The panel itself transitions width 0 → --detail-w. Its content is
+   absolutely-positioned at the panel's *final* width so the panel never
+   inflates the card's height while reflowing during the transition. */
+.webfloat-detail {
+  --detail-w: 380px;
+  position: relative;
+  flex-shrink: 0;
+  width: 0;
+  min-width: 0;
+  margin-left: 0;
+  overflow: hidden;
+  opacity: 0;
+  color: var(--c-text);
+  transition:
+    width 0.65s cubic-bezier(0.16, 1, 0.3, 1),
+    margin-left 0.65s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 0.3s ease;
+}
+.webfloat.is-modal .webfloat-detail {
+  width: var(--detail-w);
+  margin-left: 28px;
+  opacity: 1;
+  transition:
+    width 0.65s cubic-bezier(0.16, 1, 0.3, 1),
+    margin-left 0.65s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 0.4s ease 0.35s;
+}
+.webfloat-detail-inner {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: var(--detail-w);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.webfloat-tag {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2.4px;
+  color: var(--c-green);
+  text-transform: uppercase;
+  margin-bottom: 14px;
+  white-space: nowrap;
+}
+.webfloat-headline {
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.4px;
+  color: var(--c-text);
+  margin: 0 0 14px;
+}
+.webfloat-body {
+  font-size: 14.5px;
+  line-height: 1.7;
+  font-weight: 300;
+  color: var(--c-text-muted);
+  margin: 0;
+}
+
+/* ---------- Close button ---------- */
+.webfloat-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid var(--c-border);
+  background: var(--c-card);
+  color: var(--c-text-sub);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease, color 0.2s ease, transform 0.2s ease;
+}
+.webfloat.is-modal .webfloat-close {
+  opacity: 1;
+  pointer-events: auto;
+  transition: opacity 0.3s ease 0.4s, color 0.2s ease, transform 0.2s ease;
+}
+.webfloat-close:hover {
+  color: var(--c-text);
+  transform: scale(1.06);
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 960px) {
+  .webfloat-detail { --detail-w: 300px; }
+  .webfloat.is-modal .webfloat-nav { width: 340px; height: 340px; }
+  .webfloat.is-modal .webfloat-nav-inner { transform: scale(1.2143); }
+  .webfloat.is-modal .webfloat-detail { margin-left: 24px; }
+  .webfloat.is-modal .webfloat-headline { font-size: 19px; }
+  .webfloat.is-modal .webfloat-body { font-size: 13.5px; }
 }
 
 @media (max-width: 720px) {
-  .webfloat { display: none; }
+  .webfloat:not(.is-modal) { display: none; }
+  .webfloat-detail { --detail-w: min(80vw, 360px); }
+  .webfloat.is-modal .webfloat-card {
+    flex-direction: column;
+    align-items: center;
+    padding: 22px 20px 26px;
+    max-width: calc(100vw - 32px);
+  }
+  .webfloat.is-modal .webfloat-nav { width: 240px; height: 240px; }
+  .webfloat.is-modal .webfloat-nav-inner { transform: scale(0.857); }
+  .webfloat.is-modal .webfloat-detail {
+    margin-left: 0;
+    margin-top: 18px;
+    text-align: left;
+  }
 }

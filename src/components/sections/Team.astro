@@ -1,60 +1,204 @@
 ---
-const team = [
-  { name: 'Arnav',  role: 'Co-founder & CTO', img: '/assets/arnav.jpg' },
-  { name: 'Yago',   role: 'Co-founder & CEO', img: '/assets/yago.jpg'  },
+import RoaMark from '~/components/RoaMark.astro';
+
+const founders = [
+  {
+    name: 'Yago Ferretti',
+    role: 'CEO & Co-Founder',
+    img: '/assets/yago.jpg',
+    bio: [
+      'My years as a chef, including time in Michelin-star kitchens, revealed the true operational complexities of the industry.',
+      'This experience gave me the precise insights needed to build:',
+    ],
+    punch: 'my dream tool.',
+  },
+  {
+    name: 'Arnav Agarwal',
+    role: 'CTO & Co-Founder',
+    img: '/assets/arnav.jpg',
+    bio: [
+      'My background is rooted in deep analytical thinking, starting with my undergraduate degree in Theoretical Physics.',
+      'I then developed those skills with a Master’s from Columbia, which is crucial for building the solutions at the heart of',
+    ],
+    bioTrailingMark: true,
+  },
 ];
 ---
 <section id="team" class="team">
   <div class="inner">
-    <header class="reveal">
-      <span class="eyebrow">The brigade</span>
-      <h2>Built by people who’ve worked the pass.</h2>
-      <p>Engineers and operators who know what a kitchen costs in time, money, and humans.</p>
-    </header>
+    <div class="tag-wrap reveal">
+      <span class="tag">The Team</span>
+    </div>
 
-    <div class="grid">
-      {team.map((p) => (
-        <article class="member reveal">
-          <img src={p.img} alt={p.name} loading="lazy" />
-          <h3>{p.name}</h3>
-          <span>{p.role}</span>
-        </article>
-      ))}
+    <div class="layout">
+      <div class="story reveal">
+        <h2>The Story</h2>
+        <div class="story-body">
+          <p>Our story started seven years ago, in a boarding school kitchen, where we just clicked over food.</p>
+          <p>We basically turned an abandoned kitchen into a student-led restaurant. Quickly realizing the real challenges of a kitchen.</p>
+          <ul>
+            <li><span class="dot"></span><span class="bold">Operational complexities</span></li>
+            <li><span class="dot"></span><span class="bold">Food waste.</span></li>
+          </ul>
+          <p>
+            That experience, built on shared passion, directly sparked the idea for{' '}
+            <span class="story-mark"><RoaMark size="1em" strong /></span>.
+          </p>
+        </div>
+      </div>
+
+      <div class="founders">
+        {founders.map((f) => (
+          <article class="founder reveal">
+            <div class="photo">
+              <img src={f.img} alt={f.name} loading="lazy" />
+            </div>
+            <div class="meta">
+              <div class="name">{f.name}</div>
+              <div class="role">{f.role}</div>
+            </div>
+            <div class="bio">
+              {f.bio.map((p) => (
+                <p>
+                  {p}
+                  {f.bioTrailingMark && p === f.bio[f.bio.length - 1] && (
+                    <> <span class="inline-mark"><RoaMark size="1em" strong /></span>.</>
+                  )}
+                </p>
+              ))}
+              {f.punch && (
+                <p class="punch">
+                  <span class="inline-mark"><RoaMark size="1em" strong /></span>
+                  <span class="punch-text">{f.punch}</span>
+                </p>
+              )}
+            </div>
+          </article>
+        ))}
+      </div>
     </div>
   </div>
 </section>
 
 <style>
-  .team { padding: 120px 56px; border-top: 1px solid var(--c-border); }
+  .team {
+    padding: 120px 48px 100px;
+    background: linear-gradient(180deg, var(--c-bg) 0%, var(--c-bg2) 100%);
+    border-top: 1px solid var(--c-border);
+    position: relative;
+  }
   .inner { max-width: 1240px; margin: 0 auto; }
-  header { text-align: center; max-width: 720px; margin: 0 auto 56px; }
-  header h2 {
-    margin-top: 14px;
-    font-size: clamp(34px, 4vw, 52px); font-weight: 800;
-    letter-spacing: -0.02em; line-height: 1.1;
-  }
-  header p { margin-top: 16px; font-size: 16px; line-height: 1.7; color: var(--c-text-sub); }
-  .grid {
-    display: grid; gap: 24px;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    max-width: 720px; margin: 0 auto;
-  }
-  .member {
-    text-align: center;
-    padding: 28px;
-    background: var(--c-card);
-    border: 1px solid var(--c-border);
-    border-radius: 20px;
-  }
-  .member img {
-    width: 96px; height: 96px; border-radius: 50%;
-    object-fit: cover; margin: 0 auto 16px;
-    border: 2px solid var(--c-border);
-  }
-  .member h3 { font-size: 18px; font-weight: 700; }
-  .member span { font-size: 13px; color: var(--c-text-sub); margin-top: 4px; display: block; }
 
-  @media (max-width: 820px) {
+  .tag-wrap { text-align: center; margin-bottom: 64px; }
+  .tag {
+    display: inline-block;
+    padding: 10px 22px;
+    border-radius: 8px;
+    background: var(--c-pillar-pill-bg);
+    color: var(--c-pillar-pill-ink);
+    font-size: 14px; font-weight: 600; letter-spacing: 0.5px;
+    box-shadow: 0 10px 24px -12px rgba(20,40,18,0.25);
+  }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 1fr 1.4fr;
+    gap: 56px;
+    align-items: start;
+  }
+
+  /* Story column */
+  .story { padding-top: 48px; }
+  .story h2 {
+    font-size: clamp(48px, 6vw, 84px);
+    font-weight: 800; line-height: 1.0;
+    letter-spacing: -0.03em;
+    color: var(--c-text);
+    margin-bottom: 32px;
+  }
+  .story-body {
+    display: flex; flex-direction: column; gap: 16px;
+    font-size: 16px; line-height: 1.65;
+    color: var(--c-text-sub); font-weight: 400;
+    max-width: 460px;
+  }
+  .story-body ul {
+    list-style: none; padding: 0; margin: 4px 0;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .story-body li { display: flex; align-items: baseline; gap: 12px; }
+  .story-body .dot {
+    width: 5px; height: 5px; border-radius: 50%;
+    background: var(--c-green); flex-shrink: 0;
+    transform: translateY(-3px);
+  }
+  .story-body .bold { font-weight: 700; color: var(--c-text); }
+  .story-mark { color: var(--c-green); }
+
+  /* Founder cards */
+  .founders {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px;
+  }
+  .founder {
+    background: var(--c-pillar-bg);
+    border-radius: 18px;
+    padding: 18px;
+    border: 1px solid var(--c-pillar-bd);
+    box-shadow: 0 18px 40px -18px rgba(20,40,18,0.35);
+    color: var(--c-pillar-ink);
+    display: flex; flex-direction: column; gap: 18px;
+  }
+  .photo {
+    width: 100%; aspect-ratio: 1.05;
+    border-radius: 14px; overflow: hidden;
+    background: var(--c-pillar-pill-bg);
+  }
+  .photo img {
+    width: 100%; height: 100%;
+    object-fit: cover; display: block;
+  }
+  .meta { padding: 0 4px; }
+  .name {
+    font-size: 22px; font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--c-pillar-ink);
+  }
+  .role {
+    font-size: 13px; font-weight: 600;
+    letter-spacing: 0.2px;
+    color: var(--c-pillar-ink);
+    opacity: 0.7;
+    margin-top: 4px;
+  }
+  .bio {
+    padding: 0 4px 8px;
+    display: flex; flex-direction: column; gap: 14px;
+  }
+  .bio p {
+    font-size: 15px; line-height: 1.55; font-weight: 400;
+    color: var(--c-pillar-ink); opacity: 0.92;
+    margin: 0;
+  }
+  .bio .punch {
+    font-size: 16px; line-height: 1.5; font-weight: 500;
+    color: var(--c-pillar-ink); opacity: 1;
+    margin-top: 2px;
+  }
+  .bio .punch .inline-mark { margin-right: 8px; }
+  .inline-mark {
+    display: inline-flex;
+    vertical-align: baseline;
+  }
+
+  @media (max-width: 960px) {
+    .layout { grid-template-columns: 1fr; gap: 48px; }
+    .story { padding-top: 0; }
+    .story-body { max-width: none; }
+  }
+  @media (max-width: 560px) {
     .team { padding: 80px 20px; }
+    .founders { grid-template-columns: 1fr; }
   }
 </style>
