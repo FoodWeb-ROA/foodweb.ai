@@ -85,8 +85,5 @@ options:
   logging: CLOUD_LOGGING_ONLY
   machineType: "E2_HIGHCPU_8"
 
-# Run the build itself as the same SA used for runtime/deploy, so one identity
-# owns the full pipeline. Requires logging: CLOUD_LOGGING_ONLY (set above).
-serviceAccount: "projects/${_PROJECT_ID}/serviceAccounts/${_SERVICE_ACCOUNT}"
 
 timeout: "900s"

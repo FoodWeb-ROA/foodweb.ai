@@ -88,7 +88,7 @@ def _fetch_blocks(client: httpx.Client, block_id: str) -> list[dict]:
     out: list[dict] = []
     cursor: str | None = None
     while True:
-        params = {"page_size": 100}
+        params: dict[str, str | int] = {"page_size": 100}
         if cursor:
             params["start_cursor"] = cursor
         r = client.get(f"{API}/blocks/{block_id}/children", params=params)
