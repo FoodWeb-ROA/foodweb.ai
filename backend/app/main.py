@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import hashlib
+import hmac
+import json
 import logging
 import os
 import secrets as _secrets
@@ -69,16 +72,23 @@ CORS_ALLOWED_ORIGINS = [
 ]
 
 NOTION_PAGES_URL = "https://api.notion.com/v1/pages"
+NOTION_BLOG_DATABASE_ID = os.environ.get("NOTION_BLOG_DATABASE_ID", "")
 
-# Notion DB automations call this service when a blog page is published; we forward
-# to GitHub's workflow_dispatch to re-run deploy.yml, which re-runs blog_sync and
-# redeploys the site. Both values are optional so local dev / preview envs don't
-# need them; the endpoint 503s if either is missing.
-BLOG_WEBHOOK_SECRET = os.environ.get("BLOG_WEBHOOK_SECRET", "")
+# Notion's integration-level webhook (notion.so/profile/integrations → Webhooks)
+# sends all subscribed events here. We filter to the Blog DB and translate them
+# to a GitHub workflow_dispatch on deploy.yml, which re-runs blog_sync and
+# redeploys. Local dev leaves both blank — the endpoint 503s without them.
+NOTION_WEBHOOK_SECRET = os.environ.get("NOTION_WEBHOOK_SECRET", "")
 GITHUB_DISPATCH_TOKEN = os.environ.get("GITHUB_DISPATCH_TOKEN", "")
 GITHUB_DISPATCH_REPO = os.environ.get("GITHUB_DISPATCH_REPO", "FoodWeb-ROA/foodweb.ai")
 GITHUB_DISPATCH_WORKFLOW = os.environ.get("GITHUB_DISPATCH_WORKFLOW", "deploy.yml")
 GITHUB_DISPATCH_REF = os.environ.get("GITHUB_DISPATCH_REF", "main")
+
+# Events where we must re-check Draft before dispatching — a draft being edited
+# should not trigger a deploy. page.deleted/undeleted/moved bypass the check
+# (we can't fetch a deleted page, and the next blog_sync handles it correctly).
+_PUBLISH_LIKE_EVENTS = {"page.created", "page.properties_updated", "page.content_updated"}
+_REBUILD_EVENTS = {"page.deleted", "page.undeleted", "page.moved"}
 
 # Authenticated via Application Default Credentials — the Cloud Run service account
 # needs roles/recaptchaenterprise.agent on the project.
@@ -186,37 +196,57 @@ def _rich_text(value: str) -> dict:
 
 
 @app.post("/webhooks/notion-blog", status_code=202)
-async def notion_blog_webhook(request: Request, x_webhook_secret: str = Header(default="")):
-    if not BLOG_WEBHOOK_SECRET or not GITHUB_DISPATCH_TOKEN:
-        log.error("blog webhook called but BLOG_WEBHOOK_SECRET / GITHUB_DISPATCH_TOKEN unset")
-        raise HTTPException(status_code=503, detail={"error": "Webhook not configured."})
-    if not _secrets.compare_digest(x_webhook_secret, BLOG_WEBHOOK_SECRET):
-        raise HTTPException(status_code=401, detail={"error": "Bad secret."})
-
+async def notion_blog_webhook(request: Request, x_notion_signature: str = Header(default="")):
+    raw = await request.body()
     try:
-        body = await request.json()
-    except Exception:
-        body = {}
-    page_id = _extract_page_id(body)
-    if not page_id:
-        log.warning("blog webhook: no page id in body keys=%s", list(body) if isinstance(body, dict) else type(body).__name__)
-        raise HTTPException(status_code=400, detail={"error": "No page id in webhook body."})
+        body = json.loads(raw or b"{}")
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=400, detail={"error": "Invalid JSON."})
+
+    # One-time URL verification. Notion sends this with no signature when the
+    # subscription is first saved — we log the token so it can be pasted into
+    # the Notion UI to complete setup.
+    if isinstance(body, dict) and "verification_token" in body:
+        log.info("notion webhook verification_token=%s", body["verification_token"])
+        return {"ok": True}
+
+    if not NOTION_WEBHOOK_SECRET or not GITHUB_DISPATCH_TOKEN:
+        log.error("notion webhook called but NOTION_WEBHOOK_SECRET / GITHUB_DISPATCH_TOKEN unset")
+        raise HTTPException(status_code=503, detail={"error": "Webhook not configured."})
+    expected_hex = hmac.new(NOTION_WEBHOOK_SECRET.encode(), raw, hashlib.sha256).hexdigest()
+    received = x_notion_signature.removeprefix("sha256=").strip().lower()
+    if not _secrets.compare_digest(received, expected_hex):
+        # Body is JSON-serialized by FastAPI normally, but we hash the raw bytes
+        # we received — log lengths only so the secret can't be backed out.
+        log.warning(
+            "notion webhook bad signature: header_len=%d body_len=%d expected_prefix=%s received_prefix=%s",
+            len(x_notion_signature), len(raw), expected_hex[:8], received[:8],
+        )
+        raise HTTPException(status_code=401, detail={"error": "Bad signature."})
+
+    event_type = body.get("type", "")
+    parent_id = ((body.get("data") or {}).get("parent") or {}).get("id", "").replace("-", "")
+    if parent_id != NOTION_BLOG_DATABASE_ID.replace("-", ""):
+        return {"ok": True, "skipped": "not-blog-db"}
+
+    entity_id = (body.get("entity") or {}).get("id", "")
 
     async with httpx.AsyncClient(timeout=15.0) as client:
-        page_resp = await client.get(
-            f"https://api.notion.com/v1/pages/{page_id}",
-            headers={
-                "Authorization": f"Bearer {NOTION_TOKEN}",
-                "Notion-Version": NOTION_VERSION,
-            },
-        )
-        if page_resp.status_code >= 400:
-            log.error("notion fetch failed %s: %s", page_resp.status_code, page_resp.text[:500])
-            raise HTTPException(status_code=502, detail={"error": "Could not read page."})
-        page = page_resp.json()
-        if bool((page.get("properties", {}).get("Draft") or {}).get("checkbox")):
-            log.info("blog webhook %s: draft, skipping dispatch", page_id)
-            return {"ok": True, "skipped": "draft"}
+        if event_type in _PUBLISH_LIKE_EVENTS:
+            if not entity_id:
+                return {"ok": True, "skipped": "no-entity-id"}
+            page_resp = await client.get(
+                f"https://api.notion.com/v1/pages/{entity_id}",
+                headers={"Authorization": f"Bearer {NOTION_TOKEN}", "Notion-Version": NOTION_VERSION},
+            )
+            if page_resp.status_code >= 400:
+                log.error("notion fetch failed %s: %s", page_resp.status_code, page_resp.text[:500])
+                raise HTTPException(status_code=502, detail={"error": "Could not read page."})
+            if bool((page_resp.json().get("properties", {}).get("Draft") or {}).get("checkbox")):
+                log.info("notion webhook %s %s: draft, skipping", event_type, entity_id)
+                return {"ok": True, "skipped": "draft"}
+        elif event_type not in _REBUILD_EVENTS:
+            return {"ok": True, "skipped": f"event:{event_type}"}
 
         url = (
             f"https://api.github.com/repos/{GITHUB_DISPATCH_REPO}"
@@ -234,17 +264,5 @@ async def notion_blog_webhook(request: Request, x_webhook_secret: str = Header(d
     if resp.status_code >= 400:
         log.error("github dispatch failed %s: %s", resp.status_code, resp.text[:500])
         raise HTTPException(status_code=502, detail={"error": "Could not trigger rebuild."})
-    log.info("dispatched %s on %s@%s for page %s", GITHUB_DISPATCH_WORKFLOW, GITHUB_DISPATCH_REPO, GITHUB_DISPATCH_REF, page_id)
+    log.info("dispatched %s on %s@%s (%s on %s)", GITHUB_DISPATCH_WORKFLOW, GITHUB_DISPATCH_REPO, GITHUB_DISPATCH_REF, event_type, entity_id)
     return {"ok": True}
-
-
-def _extract_page_id(body: Any) -> str:
-    # Notion "Send webhook" payloads put the triggering page under .data; older /
-    # custom payloads might put it at the top level. Try both, accept either shape.
-    if not isinstance(body, dict):
-        return ""
-    for candidate in (body.get("data"), body):
-        if isinstance(candidate, dict) and candidate.get("object") == "page" and candidate.get("id"):
-            return str(candidate["id"])
-    pid = body.get("page_id") or body.get("id")
-    return str(pid) if pid else ""
