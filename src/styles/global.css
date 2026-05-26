@@ -160,14 +160,21 @@
    Resets & base
    ──────────────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
-html { scroll-behavior:smooth; }
+html {
+  scroll-behavior:smooth;
+  -webkit-text-size-adjust:100%;
+  text-size-adjust:100%;
+}
 body {
   font-family:'Poppins', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
   background: var(--c-bg);
   color: var(--c-text);
   -webkit-font-smoothing:antialiased;
   overflow-x:hidden;
+  -webkit-tap-highlight-color: transparent;
 }
+a, button { touch-action: manipulation; }
+input, select, textarea { font-size: 16px; } /* prevent iOS auto-zoom */
 ::-webkit-scrollbar { width:5px; }
 ::-webkit-scrollbar-track { background:transparent; }
 ::-webkit-scrollbar-thumb { background:#2a4226; border-radius:3px; }

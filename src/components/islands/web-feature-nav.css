@@ -1,12 +1,11 @@
 .webhub {
-  display: flex; justify-content: center; align-items: center;
-  width: 100%;
+  /* Container width drives the WebNavigator size (set in JS). Labels still
+     extend a bit beyond the wheel, so 86vw leaves breathing room. */
+  width: min(920px, 86vw);
+  margin: 0 auto;
 }
 .webhub .webnav {
-  width: min(920px, 92vw) !important;
-  height: min(920px, 92vw) !important;
-  max-width: 920px;
-  max-height: 920px;
+  margin: 0 auto;
 }
 
 /* ---------- Backdrop (shown only when modal is open) ---------- */
@@ -218,19 +217,110 @@
 }
 
 @media (max-width: 720px) {
-  .webfloat:not(.is-modal) { display: none; }
-  .webfloat-detail { --detail-w: min(80vw, 360px); }
-  .webfloat.is-modal .webfloat-card {
+  /* ---------- Mobile chip/modal ----------
+     Position via fixed top/right/left (NOT transform percentages) so the
+     card's position is fully decoupled from its measured size. The base
+     desktop translate uses `100vw - 100%`, which re-resolves as the card
+     resizes mid-animation — that's the source of the post-anim shift.
+     Mobile uses pure top/right anchoring instead, and only `opacity` +
+     `transform: scale()` animate the card's appearance. */
+
+  .webfloat {
+    /* Anchored at top-left (0,0); positioned purely via transform translate
+       using FIXED offsets. The chip card is a known 156x156, so the corner
+       offsets need no `100%`-of-self math — which means the transform never
+       re-resolves as the card resizes, and chip↔modal can animate smoothly.
+       Modal X = max(14px, 50vw - 210px) centers a card of width
+       min(100vw - 28px, 420px); modal Y is a fixed 72px from the top. */
+    top: 0; left: 0;
+    transform: translate(calc(100vw - 156px - 16px), calc(100dvh - 156px - 16px + 12px));
+    transition:
+      opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+      transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .webfloat.is-visible:not(.is-modal) {
+    transform: translate(calc(100vw - 156px - 16px), calc(100dvh - 156px - 16px));
+  }
+  .webfloat.is-modal {
+    transform: translate(max(14px, calc(50vw - 210px)), 72px);
+  }
+
+  /* Card is always column on mobile — no row→column snap. Width/padding
+     transition smoothly between chip and modal sizes. */
+  .webfloat-card {
     flex-direction: column;
-    align-items: center;
-    padding: 22px 20px 26px;
-    max-width: calc(100vw - 32px);
+    align-items: stretch;
+    width: 156px;            /* chip: nav 140 + 2*8 padding */
+    padding: 8px;
+    border-radius: 16px;
+    transition:
+      width 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+      padding 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+      border-radius 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+      box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   }
-  .webfloat.is-modal .webfloat-nav { width: 240px; height: 240px; }
-  .webfloat.is-modal .webfloat-nav-inner { transform: scale(0.857); }
-  .webfloat.is-modal .webfloat-detail {
+  .webfloat.is-modal .webfloat-card {
+    width: min(calc(100vw - 28px), 420px);
+    padding: 20px 18px 24px;
+    border-radius: 22px;
+    max-height: calc(100dvh - 96px);
+    overflow-y: auto;
+  }
+
+  /* Nav slot: fixed px in both states so width/height transitions
+     interpolate cleanly (no percentage→percentage interpolation issues). */
+  .webfloat-nav {
+    width: 140px; height: 140px;
+    margin: 0 auto;
+    transition:
+      width 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+      height 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .webfloat.is-modal .webfloat-nav {
+    width: 240px; height: 240px;
+  }
+  /* Specificity must match/beat the @media(960) rule's
+     `.webfloat.is-modal .webfloat-nav-inner` (0,3,0), so scope these the
+     same way — otherwise the 960 rule wins and the wheel renders too large
+     and off-center. ResizeObserver writes --nav-scale = slotWidth / 280. */
+  .webfloat:not(.is-modal) .webfloat-nav-inner,
+  .webfloat.is-modal .webfloat-nav-inner {
+    transform: scale(var(--nav-scale, 0.5));
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* Detail: opacity reveal only — NO width transition. Width-based reveal
+     causes text reflow which thrashes the card's measured height, and
+     produced the "card too narrow for a moment" jank on close. */
+  .webfloat-detail {
+    width: 100%;
+    max-height: 0;
     margin-left: 0;
-    margin-top: 18px;
-    text-align: left;
+    margin-top: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition:
+      max-height 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+      margin-top 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+      opacity 0.22s ease;
   }
+  .webfloat-detail-inner {
+    position: relative;
+    width: 100%;
+    height: auto;
+  }
+  .webfloat.is-modal .webfloat-detail {
+    max-height: 50vh;
+    margin-left: 0; /* override @media(960) margin-left: 24px */
+    margin-top: 18px;
+    opacity: 1;
+    transition:
+      max-height 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+      margin-top 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+      opacity 0.25s ease 0.15s;
+  }
+
+  .webfloat.is-modal .webfloat-headline { font-size: 19px; }
+  .webfloat.is-modal .webfloat-body { font-size: 14px; line-height: 1.6; }
+  .webfloat-close { top: 10px; right: 10px; }
 }

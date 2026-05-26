@@ -9,7 +9,9 @@ export default function WebFeatureNav() {
   const [scrollNode, setScrollNode] = useState<string | null>(null);
   const [floatVisible, setFloatVisible] = useState(false);
   const [modalId, setModalId] = useState<string | null>(null);
+  const [hubSize, setHubSize] = useState(920);
   const hubRef = useRef<HTMLDivElement>(null);
+  const navSlotRef = useRef<HTMLDivElement>(null);
 
   const selectNode = useCallback((nodeId: string) => {
     const el = document.getElementById(`feature-${nodeId}`);
@@ -88,6 +90,42 @@ export default function WebFeatureNav() {
     return () => window.removeEventListener('feature-learn-more', onOpen as EventListener);
   }, [openModal]);
 
+  // Keep --nav-scale in sync with the actual width of the navigator slot so
+  // the 280px inner SVG scales correctly inside the mobile modal (where the
+  // slot is responsive). Desktop CSS owns its own scale value.
+  useEffect(() => {
+    const slot = navSlotRef.current;
+    if (!slot) return;
+    const update = () => {
+      const w = slot.getBoundingClientRect().width;
+      if (w > 0) slot.style.setProperty('--nav-scale', String(w / 280));
+    };
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(slot);
+    return () => ro.disconnect();
+  }, [modalId]);
+
+  // Render the WebNavigator at the actual measured container width so it
+  // truly fits the viewport on mobile (CSS-only scaling is unreliable here
+  // because length/length is not a valid unitless scale() argument).
+  useEffect(() => {
+    const hub = hubRef.current;
+    if (!hub) return;
+    const update = () => {
+      const w = hub.getBoundingClientRect().width;
+      if (w > 0) setHubSize(Math.round(w));
+    };
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(hub);
+    window.addEventListener('resize', update);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', update);
+    };
+  }, []);
+
   // Esc closes the modal, lock body scroll while open
   useEffect(() => {
     if (!modalId) return;
@@ -112,7 +150,7 @@ export default function WebFeatureNav() {
   return (
     <>
       <div ref={hubRef} className="webhub">
-        <WebNavigator size={920} scrollNode={scrollNode} onSelect={selectNode} />
+        <WebNavigator size={hubSize} scrollNode={scrollNode} onSelect={selectNode} />
       </div>
 
       <div
@@ -133,7 +171,7 @@ export default function WebFeatureNav() {
         aria-label={isModal ? modalFeature?.tag : undefined}
       >
         <div className="webfloat-card">
-          <div className="webfloat-nav">
+          <div className="webfloat-nav" ref={navSlotRef}>
             <div className="webfloat-nav-inner">
               <WebNavigator
                 size={280}
